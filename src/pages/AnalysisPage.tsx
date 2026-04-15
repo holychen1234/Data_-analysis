@@ -281,7 +281,7 @@ export default function AnalysisPage() {
               </p>
             </div>
             <div className="flex gap-3 justify-center">
-              <Button onClick={() => navigate(`/reports/${reportId}`)} className="gradient-primary text-primary-foreground">
+              <Button onClick={() => navigate(`/dashboard/reports/${reportId}`)} className="gradient-primary text-primary-foreground">
                 View Report
               </Button>
               <Button variant="outline" onClick={resetAnalysis}>

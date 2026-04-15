@@ -41,7 +41,7 @@ export default function ReportsListPage() {
           <h1 className="text-2xl font-bold">My Reports</h1>
           <p className="text-muted-foreground mt-1">View and manage your analysis reports</p>
         </div>
-        <Button onClick={() => navigate("/analysis")} className="gradient-primary text-primary-foreground">
+        <Button onClick={() => navigate("/dashboard/analysis")} className="gradient-primary text-primary-foreground">
           <FileUp className="mr-2 h-4 w-4" />
           New Analysis
         </Button>
@@ -57,7 +57,7 @@ export default function ReportsListPage() {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <FileText className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <p className="text-muted-foreground">No reports yet</p>
-              <Button variant="link" onClick={() => navigate("/analysis")} className="mt-2">
+              <Button variant="link" onClick={() => navigate("/dashboard/analysis")} className="mt-2">
                 Create your first analysis
               </Button>
             </div>
@@ -78,7 +78,7 @@ export default function ReportsListPage() {
                   <TableRow
                     key={report.id}
                     className="cursor-pointer hover:bg-secondary/30"
-                    onClick={() => navigate(`/reports/${report.id}`)}
+                    onClick={() => navigate(`/dashboard/reports/${report.id}`)}
                   >
                     <TableCell className="font-medium">{report.title}</TableCell>
                     <TableCell className="text-muted-foreground">{report.file_name}</TableCell>

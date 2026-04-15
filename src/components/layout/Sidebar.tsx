@@ -29,18 +29,18 @@ export function Sidebar() {
   const isAdmin = profile?.role === "admin";
 
   const mainNavItems: NavItem[] = [
-    { to: "/", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
-    { to: "/analysis", label: "New Analysis", icon: <FileUp className="h-5 w-5" /> },
-    { to: "/reports", label: "My Reports", icon: <FileText className="h-5 w-5" /> },
-    { to: "/credits", label: "Credits", icon: <Coins className="h-5 w-5" /> },
-    { to: "/profile", label: "Profile", icon: <User className="h-5 w-5" /> },
+    { to: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { to: "/dashboard/analysis", label: "New Analysis", icon: <FileUp className="h-5 w-5" /> },
+    { to: "/dashboard/reports", label: "My Reports", icon: <FileText className="h-5 w-5" /> },
+    { to: "/dashboard/credits", label: "Credits", icon: <Coins className="h-5 w-5" /> },
+    { to: "/dashboard/profile", label: "Profile", icon: <User className="h-5 w-5" /> },
   ];
 
   const adminNavItems: NavItem[] = [
-    { to: "/admin", label: "Admin Overview", icon: <Shield className="h-5 w-5" /> },
-    { to: "/admin/users", label: "Manage Users", icon: <Users className="h-5 w-5" /> },
-    { to: "/admin/models", label: "AI Models", icon: <BrainCircuit className="h-5 w-5" /> },
-    { to: "/admin/reports", label: "All Reports", icon: <BarChart3 className="h-5 w-5" /> },
+    { to: "/dashboard/admin", label: "Admin Overview", icon: <Shield className="h-5 w-5" /> },
+    { to: "/dashboard/admin/users", label: "Manage Users", icon: <Users className="h-5 w-5" /> },
+    { to: "/dashboard/admin/models", label: "AI Models", icon: <BrainCircuit className="h-5 w-5" /> },
+    { to: "/dashboard/admin/reports", label: "All Reports", icon: <BarChart3 className="h-5 w-5" /> },
   ];
 
   return (
@@ -101,7 +101,7 @@ function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
   return (
     <NavLink
       to={item.to}
-      end={item.to === "/"}
+      end={item.to === "/dashboard"}
       className={({ isActive }) =>
         cn(
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",

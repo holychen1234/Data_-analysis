@@ -1,6 +1,7 @@
 import { AppLayout } from "./components/layout/AppLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import AuthPage from "./pages/AuthPage";
+import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import AnalysisPage from "./pages/AnalysisPage";
 import ReportsListPage from "./pages/ReportsListPage";
@@ -15,12 +16,17 @@ import NotFound from "./pages/NotFound";
 
 export const routers = [
   {
+    path: "/",
+    name: "home",
+    element: <HomePage />,
+  },
+  {
     path: "/auth",
     name: "auth",
     element: <AuthPage />,
   },
   {
-    path: "/",
+    path: "/dashboard",
     element: (
       <ProtectedRoute>
         <AppLayout />

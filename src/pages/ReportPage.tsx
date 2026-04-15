@@ -24,7 +24,7 @@ export default function ReportPage() {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground mb-4">Report not found</p>
-        <Button variant="outline" onClick={() => navigate("/reports")}>
+        <Button variant="outline" onClick={() => navigate("/dashboard/reports")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Reports
         </Button>
@@ -37,7 +37,7 @@ export default function ReportPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/reports")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/reports")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

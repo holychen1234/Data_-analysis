@@ -27,7 +27,7 @@ export default function DashboardPage() {
               Upload your data and let AI generate beautiful analysis reports
             </p>
           </div>
-          <Button onClick={() => navigate("/analysis")} className="gradient-primary text-primary-foreground shrink-0">
+          <Button onClick={() => navigate("/dashboard/analysis")} className="gradient-primary text-primary-foreground shrink-0">
             <FileUp className="mr-2 h-4 w-4" />
             New Analysis
           </Button>
@@ -64,7 +64,7 @@ export default function DashboardPage() {
             <CardDescription>Your latest analysis reports</CardDescription>
           </div>
           {reports.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => navigate("/reports")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard/reports")}>
               View All
             </Button>
           )}
@@ -81,7 +81,7 @@ export default function DashboardPage() {
                 <BarChart3 className="h-8 w-8 text-primary" />
               </div>
               <p className="text-muted-foreground mb-4">No reports yet. Start your first analysis!</p>
-              <Button onClick={() => navigate("/analysis")} variant="outline" className="border-primary/30 hover:bg-primary/10">
+              <Button onClick={() => navigate("/dashboard/analysis")} variant="outline" className="border-primary/30 hover:bg-primary/10">
                 <FileUp className="mr-2 h-4 w-4" />
                 Upload Data
               </Button>
@@ -91,7 +91,7 @@ export default function DashboardPage() {
               {reports.map((report) => (
                 <button
                   key={report.id}
-                  onClick={() => navigate(`/reports/${report.id}`)}
+                  onClick={() => navigate(`/dashboard/reports/${report.id}`)}
                   className="flex w-full items-center justify-between rounded-lg border border-border/50 p-3 text-left transition-all hover:bg-secondary/50 hover:border-primary/20"
                 >
                   <div className="flex items-center gap-3 min-w-0">

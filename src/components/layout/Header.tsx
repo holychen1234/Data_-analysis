@@ -39,7 +39,7 @@ export function Header() {
       <div className="flex items-center gap-3">
         {/* Credits display */}
         <button
-          onClick={() => navigate("/credits")}
+          onClick={() => navigate("/dashboard/credits")}
           className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium glass hover:glow-primary transition-all cursor-pointer"
         >
           <Coins className="h-4 w-4 text-accent" />
@@ -73,11 +73,11 @@ export function Header() {
               <p className="text-xs text-muted-foreground">{profile?.email}</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate("/profile")}>
+            <DropdownMenuItem onClick={() => navigate("/dashboard/profile")}>
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/credits")}>
+            <DropdownMenuItem onClick={() => navigate("/dashboard/credits")}>
               <Coins className="mr-2 h-4 w-4" />
               Credits
             </DropdownMenuItem>
