@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ interface AIModel {
 }
 
 export default function ModelManagementPage() {
+  const { t } = useLanguage();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingModel, setEditingModel] = useState<AIModel | null>(null);
   const [form, setForm] = useState({
@@ -77,9 +79,9 @@ export default function ModelManagementPage() {
         })
         .eq("id", editingModel.id);
       if (error) {
-        toast({ title: "Error", description: "Failed to update model", variant: "destructive" });
+        toast({ title: t("common.error"), description: t("admin.models.updateFailed"), variant: "destructive" });
       } else {
-        toast({ title: "Updated", description: "Model updated successfully" });
+        toast({ title: t("admin.models.updated"), description: t("admin.models.updatedDesc") });
       }
     } else {
       const { error } = await supabase.from("ai_models").insert({
@@ -90,9 +92,9 @@ export default function ModelManagementPage() {
         is_active: true,
       });
       if (error) {
-        toast({ title: "Error", description: "Failed to create model", variant: "destructive" });
+        toast({ title: t("common.error"), description: t("admin.models.createFailed"), variant: "destructive" });
       } else {
-        toast({ title: "Created", description: "Model added successfully" });
+        toast({ title: t("admin.models.created"), description: t("admin.models.createdDesc") });
       }
     }
     setDialogOpen(false);
@@ -112,12 +114,12 @@ export default function ModelManagementPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">AI Models</h1>
-          <p className="text-muted-foreground mt-1">Configure and manage AI models</p>
+          <h1 className="text-2xl font-bold">{t("admin.models.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("admin.models.subtitle")}</p>
         </div>
         <Button onClick={openAddDialog} className="gradient-primary text-primary-foreground">
           <Plus className="mr-2 h-4 w-4" />
-          Add Model
+          {t("admin.models.addModel")}
         </Button>
       </div>
 
@@ -130,18 +132,18 @@ export default function ModelManagementPage() {
           ) : (models ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <BrainCircuit className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground text-sm">No models configured yet</p>
+              <p className="text-muted-foreground text-sm">{t("admin.models.noModels")}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Model ID</TableHead>
-                  <TableHead>Cost</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("admin.models.col.model")}</TableHead>
+                  <TableHead>{t("admin.models.col.provider")}</TableHead>
+                  <TableHead>{t("admin.models.col.modelId")}</TableHead>
+                  <TableHead>{t("admin.models.col.cost")}</TableHead>
+                  <TableHead>{t("admin.models.col.active")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -154,7 +156,7 @@ export default function ModelManagementPage() {
                     <TableCell className="text-muted-foreground font-mono text-xs">
                       {model.model_id}
                     </TableCell>
-                    <TableCell>{model.cost_per_analysis} credits</TableCell>
+                    <TableCell>{model.cost_per_analysis} {t("common.credits")}</TableCell>
                     <TableCell>
                       <Switch
                         checked={model.is_active}
@@ -178,16 +180,15 @@ export default function ModelManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingModel ? "Edit Model" : "Add New Model"}</DialogTitle>
-            <DialogDescription>Configure AI model settings</DialogDescription>
+            <DialogTitle>{editingModel ? t("admin.models.editModel") : t("admin.models.addNew")}</DialogTitle>
+            <DialogDescription>{t("admin.models.configDesc")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="model-name">Display Name</Label>
+              <Label htmlFor="model-name">{t("admin.models.displayName")}</Label>
               <Input
                 id="model-name"
                 value={form.name}
@@ -196,7 +197,7 @@ export default function ModelManagementPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="model-provider">Provider</Label>
+              <Label htmlFor="model-provider">{t("admin.models.provider")}</Label>
               <Input
                 id="model-provider"
                 value={form.provider}
@@ -205,7 +206,7 @@ export default function ModelManagementPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="model-id">Model ID</Label>
+              <Label htmlFor="model-id">{t("admin.models.modelId")}</Label>
               <Input
                 id="model-id"
                 value={form.model_id}
@@ -214,7 +215,7 @@ export default function ModelManagementPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="model-cost">Cost per Analysis (credits)</Label>
+              <Label htmlFor="model-cost">{t("admin.models.costPerAnalysis")}</Label>
               <Input
                 id="model-cost"
                 type="number"
@@ -225,14 +226,14 @@ export default function ModelManagementPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button
               onClick={handleSave}
               disabled={saving || !form.name || !form.model_id}
               className="gradient-primary text-primary-foreground"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {editingModel ? "Update" : "Create"}
+              {editingModel ? t("admin.models.update") : t("admin.models.create")}
             </Button>
           </DialogFooter>
         </DialogContent>

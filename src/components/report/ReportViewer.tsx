@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ChartRenderer, type ChartConfig } from "./ChartRenderer";
 import { StatCard } from "./StatCard";
 import { DataTableView } from "./DataTable";
@@ -27,14 +28,14 @@ interface ReportViewerProps {
 
 export function ReportViewer({ data }: ReportViewerProps) {
   const report = data as unknown as ReportData;
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
       {report.summary && (
         <Card className="glass border-border/50">
           <CardHeader>
-            <CardTitle className="text-gradient-primary">Analysis Summary</CardTitle>
+            <CardTitle className="text-gradient-primary">{t("report.summary")}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{report.summary}</p>
@@ -42,7 +43,6 @@ export function ReportViewer({ data }: ReportViewerProps) {
         </Card>
       )}
 
-      {/* Stats */}
       {report.stats && report.stats.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {report.stats.map((stat, i) => (
@@ -51,7 +51,6 @@ export function ReportViewer({ data }: ReportViewerProps) {
         </div>
       )}
 
-      {/* Charts */}
       {report.charts && report.charts.length > 0 && (
         <div className="grid gap-6 lg:grid-cols-2">
           {report.charts.map((chart, i) => (
@@ -67,7 +66,6 @@ export function ReportViewer({ data }: ReportViewerProps) {
         </div>
       )}
 
-      {/* Tables */}
       {report.tables && report.tables.length > 0 && (
         <div className="space-y-6">
           {report.tables.map((table, i) => (
@@ -76,11 +74,10 @@ export function ReportViewer({ data }: ReportViewerProps) {
         </div>
       )}
 
-      {/* Insights */}
       {report.insights && report.insights.length > 0 && (
         <Card className="glass border-border/50">
           <CardHeader>
-            <CardTitle className="text-gradient-accent">Key Insights</CardTitle>
+            <CardTitle className="text-gradient-accent">{t("report.keyInsights")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">

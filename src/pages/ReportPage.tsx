@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useReport } from "@/hooks/use-reports";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
@@ -10,6 +11,7 @@ import { exportReportAsHtml } from "@/components/report/ReportExporter";
 export default function ReportPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { report, isLoading } = useReport(id || "");
 
   if (isLoading) {
@@ -23,18 +25,26 @@ export default function ReportPage() {
   if (!report) {
     return (
       <div className="text-center py-20">
-        <p className="text-muted-foreground mb-4">Report not found</p>
+        <p className="text-muted-foreground mb-4">{t("report.notFound")}</p>
         <Button variant="outline" onClick={() => navigate("/dashboard/reports")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Reports
+          {t("report.backToReports")}
         </Button>
       </div>
     );
   }
 
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case "completed": return t("common.completed");
+      case "processing": return t("common.processing");
+      case "failed": return t("common.failed");
+      default: return status;
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/reports")}>
@@ -44,7 +54,7 @@ export default function ReportPage() {
             <h1 className="text-2xl font-bold">{report.title}</h1>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant={report.status === "completed" ? "default" : "secondary"}>
-                {report.status}
+                {statusLabel(report.status)}
               </Badge>
               <span className="text-sm text-muted-foreground">
                 {report.file_name} &middot; {new Date(report.created_at).toLocaleString()}
@@ -59,12 +69,11 @@ export default function ReportPage() {
             className="border-primary/30 hover:bg-primary/10"
           >
             <Download className="mr-2 h-4 w-4" />
-            Export HTML
+            {t("report.exportHTML")}
           </Button>
         )}
       </div>
 
-      {/* Report content */}
       {report.status === "completed" && report.report_data ? (
         <ReportViewer data={report.report_data} />
       ) : report.status === "processing" ? (
@@ -72,14 +81,14 @@ export default function ReportPage() {
           <CardContent className="flex items-center justify-center py-16">
             <div className="text-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-              <p className="text-muted-foreground">Analysis is still processing...</p>
+              <p className="text-muted-foreground">{t("report.stillProcessing")}</p>
             </div>
           </CardContent>
         </Card>
       ) : (
         <Card className="glass border-border/50">
           <CardContent className="flex items-center justify-center py-16">
-            <p className="text-destructive">Analysis failed. Please try again.</p>
+            <p className="text-destructive">{t("report.failedRetry")}</p>
           </CardContent>
         </Card>
       )}

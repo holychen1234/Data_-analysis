@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +12,7 @@ import { BarChart3, Loader2, AlertCircle } from "lucide-react";
 
 export default function AuthPage() {
   const { user, isLoading } = useAuth();
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -23,21 +26,24 @@ export default function AuthPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      {/* Background decoration */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
+      {/* Language switcher */}
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSwitcher variant="outline" />
+      </div>
+
       <div className="w-full max-w-md animate-fade-in relative z-10">
-        {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl gradient-primary animate-pulse-glow">
             <BarChart3 className="h-7 w-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-gradient-primary">DataViz AI</h1>
+          <h1 className="text-2xl font-bold text-gradient-primary">{t("auth.title")}</h1>
           <p className="text-sm text-muted-foreground text-center">
-            AI-powered data analysis and visualization platform
+            {t("auth.subtitle")}
           </p>
         </div>
 
@@ -45,8 +51,8 @@ export default function AuthPage() {
           <Tabs defaultValue="login">
             <CardHeader className="pb-3">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="register">Sign Up</TabsTrigger>
+                <TabsTrigger value="login">{t("auth.signIn")}</TabsTrigger>
+                <TabsTrigger value="register">{t("auth.signUp")}</TabsTrigger>
               </TabsList>
             </CardHeader>
             <CardContent>
@@ -66,6 +72,7 @@ export default function AuthPage() {
 
 function LoginForm() {
   const { signIn } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +89,7 @@ function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <CardDescription className="mb-4">Sign in to your account to continue</CardDescription>
+      <CardDescription className="mb-4">{t("auth.signInDesc")}</CardDescription>
       {error && (
         <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
@@ -90,22 +97,22 @@ function LoginForm() {
         </div>
       )}
       <div className="space-y-2">
-        <Label htmlFor="login-email">Email</Label>
+        <Label htmlFor="login-email">{t("auth.email")}</Label>
         <Input
           id="login-email"
           type="email"
-          placeholder="your@email.com"
+          placeholder={t("auth.emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="login-password">Password</Label>
+        <Label htmlFor="login-password">{t("auth.password")}</Label>
         <Input
           id="login-password"
           type="password"
-          placeholder="Enter your password"
+          placeholder={t("auth.passwordPlaceholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -113,7 +120,7 @@ function LoginForm() {
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Sign In
+        {t("auth.signInBtn")}
       </Button>
     </form>
   );
@@ -121,6 +128,7 @@ function LoginForm() {
 
 function RegisterForm() {
   const { signUp } = useAuth();
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -144,15 +152,15 @@ function RegisterForm() {
   if (success) {
     return (
       <div className="py-6 text-center space-y-2">
-        <CardTitle className="text-lg">Registration Successful!</CardTitle>
-        <CardDescription>Please check your email to verify your account, then sign in.</CardDescription>
+        <CardTitle className="text-lg">{t("auth.regSuccess")}</CardTitle>
+        <CardDescription>{t("auth.regSuccessDesc")}</CardDescription>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <CardDescription className="mb-4">Create a new account to get started</CardDescription>
+      <CardDescription className="mb-4">{t("auth.signUpDesc")}</CardDescription>
       {error && (
         <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
@@ -160,32 +168,32 @@ function RegisterForm() {
         </div>
       )}
       <div className="space-y-2">
-        <Label htmlFor="reg-name">Display Name</Label>
+        <Label htmlFor="reg-name">{t("auth.displayName")}</Label>
         <Input
           id="reg-name"
-          placeholder="Your name"
+          placeholder={t("auth.displayNamePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="reg-email">Email</Label>
+        <Label htmlFor="reg-email">{t("auth.email")}</Label>
         <Input
           id="reg-email"
           type="email"
-          placeholder="your@email.com"
+          placeholder={t("auth.emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="reg-password">Password</Label>
+        <Label htmlFor="reg-password">{t("auth.password")}</Label>
         <Input
           id="reg-password"
           type="password"
-          placeholder="At least 6 characters"
+          placeholder={t("auth.passwordHint")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -194,7 +202,7 @@ function RegisterForm() {
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Create Account
+        {t("auth.signUpBtn")}
       </Button>
     </form>
   );

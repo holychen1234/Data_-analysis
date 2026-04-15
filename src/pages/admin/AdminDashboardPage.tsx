@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, Coins, BrainCircuit, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Users, FileText, BrainCircuit, Loader2 } from "lucide-react";
 
 export default function AdminDashboardPage() {
+  const { t } = useLanguage();
   const { data: stats, isLoading } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
@@ -31,14 +33,14 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Platform overview and management</p>
+        <h1 className="text-2xl font-bold">{t("admin.dashboard")}</h1>
+        <p className="text-muted-foreground mt-1">{t("admin.dashboardDesc")}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <AdminStatCard title="Total Users" value={stats?.users ?? 0} icon={<Users className="h-5 w-5" />} />
-        <AdminStatCard title="Total Reports" value={stats?.reports ?? 0} icon={<FileText className="h-5 w-5" />} />
-        <AdminStatCard title="AI Models" value={stats?.models ?? 0} icon={<BrainCircuit className="h-5 w-5" />} />
+        <AdminStatCard title={t("admin.totalUsers")} value={stats?.users ?? 0} icon={<Users className="h-5 w-5" />} />
+        <AdminStatCard title={t("admin.totalReports")} value={stats?.reports ?? 0} icon={<FileText className="h-5 w-5" />} />
+        <AdminStatCard title={t("admin.aiModels")} value={stats?.models ?? 0} icon={<BrainCircuit className="h-5 w-5" />} />
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { Loader2, FileText } from "lucide-react";
 import type { Report } from "@/hooks/use-reports";
 
 export default function ReportsManagementPage() {
+  const { t } = useLanguage();
   const { data: reports, isLoading } = useQuery({
     queryKey: ["admin-all-reports"],
     queryFn: async () => {
@@ -28,11 +30,20 @@ export default function ReportsManagementPage() {
     }
   };
 
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case "completed": return t("common.completed");
+      case "processing": return t("common.processing");
+      case "failed": return t("common.failed");
+      default: return status;
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">All Reports</h1>
-        <p className="text-muted-foreground mt-1">View all analysis reports from all users</p>
+        <h1 className="text-2xl font-bold">{t("admin.reports.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("admin.reports.subtitle")}</p>
       </div>
 
       <Card className="glass border-border/50">
@@ -44,17 +55,17 @@ export default function ReportsManagementPage() {
           ) : (reports ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground text-sm">No reports yet</p>
+              <p className="text-muted-foreground text-sm">{t("admin.reports.noReports")}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Credits</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>{t("reports.col.title")}</TableHead>
+                  <TableHead>{t("common.user")}</TableHead>
+                  <TableHead>{t("common.status")}</TableHead>
+                  <TableHead>{t("reports.col.credits")}</TableHead>
+                  <TableHead>{t("common.date")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -63,12 +74,12 @@ export default function ReportsManagementPage() {
                     <TableCell className="font-medium">{report.title}</TableCell>
                     <TableCell>
                       <div>
-                        <p className="text-sm">{report.profiles?.display_name ?? "Unknown"}</p>
+                        <p className="text-sm">{report.profiles?.display_name ?? t("common.unknown")}</p>
                         <p className="text-xs text-muted-foreground">{report.profiles?.email}</p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant(report.status)}>{report.status}</Badge>
+                      <Badge variant={statusVariant(report.status)}>{statusLabel(report.status)}</Badge>
                     </TableCell>
                     <TableCell>{report.credits_used}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">

@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   LayoutDashboard,
   FileUp,
@@ -25,22 +26,23 @@ interface NavItem {
 
 export function Sidebar() {
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const isAdmin = profile?.role === "admin";
 
   const mainNavItems: NavItem[] = [
-    { to: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
-    { to: "/dashboard/analysis", label: "New Analysis", icon: <FileUp className="h-5 w-5" /> },
-    { to: "/dashboard/reports", label: "My Reports", icon: <FileText className="h-5 w-5" /> },
-    { to: "/dashboard/credits", label: "Credits", icon: <Coins className="h-5 w-5" /> },
-    { to: "/dashboard/profile", label: "Profile", icon: <User className="h-5 w-5" /> },
+    { to: "/dashboard", label: t("nav.dashboard"), icon: <LayoutDashboard className="h-5 w-5" /> },
+    { to: "/dashboard/analysis", label: t("nav.newAnalysis"), icon: <FileUp className="h-5 w-5" /> },
+    { to: "/dashboard/reports", label: t("nav.myReports"), icon: <FileText className="h-5 w-5" /> },
+    { to: "/dashboard/credits", label: t("nav.credits"), icon: <Coins className="h-5 w-5" /> },
+    { to: "/dashboard/profile", label: t("nav.profile"), icon: <User className="h-5 w-5" /> },
   ];
 
   const adminNavItems: NavItem[] = [
-    { to: "/dashboard/admin", label: "Admin Overview", icon: <Shield className="h-5 w-5" /> },
-    { to: "/dashboard/admin/users", label: "Manage Users", icon: <Users className="h-5 w-5" /> },
-    { to: "/dashboard/admin/models", label: "AI Models", icon: <BrainCircuit className="h-5 w-5" /> },
-    { to: "/dashboard/admin/reports", label: "All Reports", icon: <BarChart3 className="h-5 w-5" /> },
+    { to: "/dashboard/admin", label: t("nav.adminOverview"), icon: <Shield className="h-5 w-5" /> },
+    { to: "/dashboard/admin/users", label: t("nav.manageUsers"), icon: <Users className="h-5 w-5" /> },
+    { to: "/dashboard/admin/models", label: t("nav.aiModels"), icon: <BrainCircuit className="h-5 w-5" /> },
+    { to: "/dashboard/admin/reports", label: t("nav.allReports"), icon: <BarChart3 className="h-5 w-5" /> },
   ];
 
   return (
@@ -50,20 +52,18 @@ export function Sidebar() {
         collapsed ? "w-16" : "w-60"
       )}
     >
-      {/* Logo */}
       <div className="flex h-14 items-center gap-2 border-b border-border/50 px-4">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg gradient-primary">
           <BarChart3 className="h-4 w-4 text-primary-foreground" />
         </div>
         {!collapsed && (
-          <span className="text-lg font-bold text-gradient-primary">DataViz AI</span>
+          <span className="text-lg font-bold text-gradient-primary">{t("brand.name")}</span>
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
         <p className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", collapsed && "sr-only")}>
-          Main
+          {t("nav.main")}
         </p>
         {mainNavItems.map((item) => (
           <SidebarLink key={item.to} item={item} collapsed={collapsed} />
@@ -73,7 +73,7 @@ export function Sidebar() {
           <>
             <div className="my-3 mx-3 border-t border-border/50" />
             <p className={cn("px-3 py-2 text-xs font-semibold uppercase text-muted-foreground tracking-wider", collapsed && "sr-only")}>
-              Admin
+              {t("nav.adminSection")}
             </p>
             {adminNavItems.map((item) => (
               <SidebarLink key={item.to} item={item} collapsed={collapsed} />
@@ -82,7 +82,6 @@ export function Sidebar() {
         )}
       </nav>
 
-      {/* Collapse toggle */}
       <div className="p-2 border-t border-border/50">
         <Button
           variant="ghost"

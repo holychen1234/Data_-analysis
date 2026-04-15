@@ -1,4 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -14,6 +16,7 @@ import { useEffect, useState } from "react";
 
 export function Header() {
   const { profile, signOut } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [isDark, setIsDark] = useState(true);
 
@@ -46,6 +49,9 @@ export function Header() {
           <span className="text-foreground">{profile?.credits ?? 0}</span>
         </button>
 
+        {/* Language switcher */}
+        <LanguageSwitcher />
+
         {/* Theme toggle */}
         <Button
           variant="ghost"
@@ -75,16 +81,16 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate("/dashboard/profile")}>
               <User className="mr-2 h-4 w-4" />
-              Profile
+              {t("common.profile")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/dashboard/credits")}>
               <Coins className="mr-2 h-4 w-4" />
-              Credits
+              {t("common.credits")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut()}>
               <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+              {t("common.signOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

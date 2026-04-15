@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,13 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { FileUp, X, FileSpreadsheet, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { parseFile, isValidFileType, type ParsedData } from "@/lib/file-parser";
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 type AnalysisStep = "upload" | "configure" | "processing" | "done";
 
 export default function AnalysisPage() {
   const { profile, refreshProfile } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [step, setStep] = useState<AnalysisStep>("upload");
   const [file, setFile] = useState<File | null>(null);
@@ -29,11 +31,11 @@ export default function AnalysisPage() {
   const handleFile = useCallback(async (f: File) => {
     setParseError(null);
     if (!isValidFileType(f.name)) {
-      setParseError("Unsupported file type. Please upload CSV or Excel files.");
+      setParseError(t("analysis.unsupported"));
       return;
     }
     if (f.size > 10 * 1024 * 1024) {
-      setParseError("File too large. Maximum size is 10MB.");
+      setParseError(t("analysis.tooLarge"));
       return;
     }
     try {
@@ -44,7 +46,7 @@ export default function AnalysisPage() {
     } catch (err) {
       setParseError(err instanceof Error ? err.message : "Failed to parse file");
     }
-  }, []);
+  }, [t]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -61,8 +63,8 @@ export default function AnalysisPage() {
 
     if ((profile.credits ?? 0) < 10) {
       toast({
-        title: "Insufficient Credits",
-        description: "You need at least 10 credits for an analysis. Please recharge.",
+        title: t("analysis.insufficientCredits"),
+        description: t("analysis.insufficientCreditsDesc"),
         variant: "destructive",
       });
       return;
@@ -72,7 +74,6 @@ export default function AnalysisPage() {
     setProgress(10);
 
     try {
-      // Prepare data subset for AI (limit to avoid token overflow)
       const dataSubset = parsedData.rows.slice(0, 100);
       const progressInterval = setInterval(() => {
         setProgress((prev) => Math.min(prev + 5, 85));
@@ -84,7 +85,7 @@ export default function AnalysisPage() {
           headers: parsedData.headers,
           rows: dataSubset,
           summary: parsedData.summary,
-          requirements: requirements || "Perform a comprehensive data analysis with key statistics, trends, and visualizations.",
+          requirements: requirements || t("analysis.defaultReq"),
         },
       });
 
@@ -98,14 +99,14 @@ export default function AnalysisPage() {
       setStep("done");
 
       toast({
-        title: "Analysis Complete!",
-        description: "Your report has been generated successfully.",
+        title: t("analysis.complete"),
+        description: t("analysis.completeDesc"),
       });
     } catch (err) {
       setStep("configure");
       toast({
-        title: "Analysis Failed",
-        description: err instanceof Error ? err.message : "An error occurred during analysis.",
+        title: t("analysis.failed"),
+        description: err instanceof Error ? err.message : t("analysis.failed"),
         variant: "destructive",
       });
     }
@@ -124,16 +125,15 @@ export default function AnalysisPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">New Analysis</h1>
-        <p className="text-muted-foreground mt-1">Upload your data file and let AI analyze it</p>
+        <h1 className="text-2xl font-bold">{t("analysis.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("analysis.subtitle")}</p>
       </div>
 
-      {/* Step: Upload */}
       {step === "upload" && (
         <Card className="glass border-border/50">
           <CardHeader>
-            <CardTitle>Upload Data File</CardTitle>
-            <CardDescription>Supports CSV, XLSX, XLS formats (max 10MB)</CardDescription>
+            <CardTitle>{t("analysis.uploadTitle")}</CardTitle>
+            <CardDescription>{t("analysis.uploadDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div
@@ -150,9 +150,7 @@ export default function AnalysisPage() {
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-4">
                 <FileUp className="h-7 w-7 text-primary" />
               </div>
-              <p className="text-sm font-medium mb-1">
-                Drag and drop your file here, or click to browse
-              </p>
+              <p className="text-sm font-medium mb-1">{t("analysis.dragDrop")}</p>
               <p className="text-xs text-muted-foreground">CSV, XLSX, XLS</p>
               <input
                 id="file-input"
@@ -175,10 +173,8 @@ export default function AnalysisPage() {
         </Card>
       )}
 
-      {/* Step: Configure */}
       {step === "configure" && parsedData && (
         <>
-          {/* File info */}
           <Card className="glass border-border/50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -210,41 +206,37 @@ export default function AnalysisPage() {
             </CardContent>
           </Card>
 
-          {/* Analysis config */}
           <Card className="glass border-border/50">
             <CardHeader>
-              <CardTitle>Analysis Requirements</CardTitle>
-              <CardDescription>
-                Describe what you want to analyze (leave empty for comprehensive analysis)
-              </CardDescription>
+              <CardTitle>{t("analysis.requirementsTitle")}</CardTitle>
+              <CardDescription>{t("analysis.requirementsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="requirements">Your Requirements (Optional)</Label>
+                <Label htmlFor="requirements">{t("analysis.requirementsLabel")}</Label>
                 <Textarea
                   id="requirements"
-                  placeholder="e.g., Analyze sales trends by month, identify top-performing products, and show regional distribution..."
+                  placeholder={t("analysis.requirementsPlaceholder")}
                   value={requirements}
                   onChange={(e) => setRequirements(e.target.value)}
                   rows={4}
                 />
               </div>
               <div className="flex items-center justify-between rounded-lg bg-primary/5 p-3">
-                <span className="text-sm text-muted-foreground">Cost: 10 credits</span>
+                <span className="text-sm text-muted-foreground">{t("analysis.cost")}</span>
                 <span className="text-sm font-medium">
-                  Balance: {profile?.credits ?? 0} credits
+                  {t("analysis.balance")}{profile?.credits ?? 0} {t("common.credits")}
                 </span>
               </div>
               <Button onClick={handleSubmit} className="w-full gradient-primary text-primary-foreground">
                 <Sparkles className="mr-2 h-4 w-4" />
-                Start AI Analysis
+                {t("analysis.startAI")}
               </Button>
             </CardContent>
           </Card>
         </>
       )}
 
-      {/* Step: Processing */}
       {step === "processing" && (
         <Card className="glass border-border/50 glow-primary">
           <CardContent className="p-8 text-center space-y-6">
@@ -254,18 +246,15 @@ export default function AnalysisPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold">AI is Analyzing Your Data</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Generating statistics, insights, and visualizations...
-              </p>
+              <h3 className="text-lg font-semibold">{t("analysis.aiAnalyzing")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{t("analysis.generating")}</p>
             </div>
             <Progress value={progress} className="h-2" />
-            <p className="text-xs text-muted-foreground">{progress}% complete</p>
+            <p className="text-xs text-muted-foreground">{progress}%</p>
           </CardContent>
         </Card>
       )}
 
-      {/* Step: Done */}
       {step === "done" && (
         <Card className="glass border-border/50">
           <CardContent className="p-8 text-center space-y-6">
@@ -275,17 +264,15 @@ export default function AnalysisPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold">Analysis Complete!</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Your report has been generated successfully.
-              </p>
+              <h3 className="text-lg font-semibold">{t("analysis.complete")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{t("analysis.completeDesc")}</p>
             </div>
             <div className="flex gap-3 justify-center">
               <Button onClick={() => navigate(`/dashboard/reports/${reportId}`)} className="gradient-primary text-primary-foreground">
-                View Report
+                {t("analysis.viewReport")}
               </Button>
               <Button variant="outline" onClick={resetAnalysis}>
-                New Analysis
+                {t("analysis.newAnalysis")}
               </Button>
             </div>
           </CardContent>

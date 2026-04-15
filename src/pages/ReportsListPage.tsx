@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,17 +11,18 @@ import { toast } from "@/hooks/use-toast";
 
 export default function ReportsListPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { reports, isLoading, refetch } = useReports();
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this report?")) return;
+    if (!confirm(t("reports.deleteConfirm"))) return;
 
     const { error } = await supabase.from("reports").delete().eq("id", id);
     if (error) {
-      toast({ title: "Error", description: "Failed to delete report", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("reports.deleteFailed"), variant: "destructive" });
     } else {
-      toast({ title: "Deleted", description: "Report deleted successfully" });
+      toast({ title: t("reports.deleted"), description: t("reports.deletedDesc") });
       refetch();
     }
   };
@@ -34,16 +36,25 @@ export default function ReportsListPage() {
     }
   };
 
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case "completed": return t("common.completed");
+      case "processing": return t("common.processing");
+      case "failed": return t("common.failed");
+      default: return status;
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">My Reports</h1>
-          <p className="text-muted-foreground mt-1">View and manage your analysis reports</p>
+          <h1 className="text-2xl font-bold">{t("reports.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("reports.subtitle")}</p>
         </div>
         <Button onClick={() => navigate("/dashboard/analysis")} className="gradient-primary text-primary-foreground">
           <FileUp className="mr-2 h-4 w-4" />
-          New Analysis
+          {t("nav.newAnalysis")}
         </Button>
       </div>
 
@@ -56,21 +67,21 @@ export default function ReportsListPage() {
           ) : reports.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <FileText className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground">No reports yet</p>
+              <p className="text-muted-foreground">{t("reports.noReports")}</p>
               <Button variant="link" onClick={() => navigate("/dashboard/analysis")} className="mt-2">
-                Create your first analysis
+                {t("reports.createFirst")}
               </Button>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>File</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Credits</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("reports.col.title")}</TableHead>
+                  <TableHead>{t("reports.col.file")}</TableHead>
+                  <TableHead>{t("common.status")}</TableHead>
+                  <TableHead>{t("reports.col.credits")}</TableHead>
+                  <TableHead>{t("common.date")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -83,7 +94,7 @@ export default function ReportsListPage() {
                     <TableCell className="font-medium">{report.title}</TableCell>
                     <TableCell className="text-muted-foreground">{report.file_name}</TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant(report.status)}>{report.status}</Badge>
+                      <Badge variant={statusVariant(report.status)}>{statusLabel(report.status)}</Badge>
                     </TableCell>
                     <TableCell>{report.credits_used}</TableCell>
                     <TableCell className="text-muted-foreground">

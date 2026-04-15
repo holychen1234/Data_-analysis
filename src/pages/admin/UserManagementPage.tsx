@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Profile } from "@/contexts/AuthContext";
 
 export default function UserManagementPage() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [grantDialog, setGrantDialog] = useState<{ open: boolean; user: Profile | null }>({
     open: false,
@@ -53,9 +55,9 @@ export default function UserManagementPage() {
     });
 
     if (error) {
-      toast({ title: "Error", description: "Failed to grant credits", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("admin.users.grantFailed"), variant: "destructive" });
     } else {
-      toast({ title: "Success", description: `Granted ${grantAmount} credits to ${grantDialog.user.display_name}` });
+      toast({ title: t("admin.users.grantSuccess"), description: `${grantAmount} ${t("common.credits")} -> ${grantDialog.user.display_name}` });
       setGrantDialog({ open: false, user: null });
       setGrantAmount("");
       refetch();
@@ -66,15 +68,15 @@ export default function UserManagementPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">User Management</h1>
-        <p className="text-muted-foreground mt-1">Manage users and grant credits</p>
+        <h1 className="text-2xl font-bold">{t("admin.users.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("admin.users.subtitle")}</p>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search users..."
+            placeholder={t("admin.users.search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -92,11 +94,11 @@ export default function UserManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Credits</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("admin.users.col.user")}</TableHead>
+                  <TableHead>{t("admin.users.col.role")}</TableHead>
+                  <TableHead>{t("admin.users.col.credits")}</TableHead>
+                  <TableHead>{t("admin.users.col.joined")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -111,7 +113,7 @@ export default function UserManagementPage() {
                     <TableCell>
                       <Badge variant={user.role === "admin" ? "default" : "secondary"}>
                         {user.role === "admin" ? <Shield className="mr-1 h-3 w-3" /> : <User className="mr-1 h-3 w-3" />}
-                        {user.role}
+                        {user.role === "admin" ? t("common.admin") : t("common.user")}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">{user.credits.toLocaleString()}</TableCell>
@@ -126,7 +128,7 @@ export default function UserManagementPage() {
                         className="border-primary/30 hover:bg-primary/10"
                       >
                         <Coins className="mr-1 h-3.5 w-3.5" />
-                        Grant Credits
+                        {t("admin.users.grantCredits")}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -137,26 +139,25 @@ export default function UserManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Grant Credits Dialog */}
       <Dialog open={grantDialog.open} onOpenChange={(open) => setGrantDialog({ open, user: grantDialog.user })}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Grant Credits</DialogTitle>
+            <DialogTitle>{t("admin.users.grantTitle")}</DialogTitle>
             <DialogDescription>
-              Grant credits to {grantDialog.user?.display_name} ({grantDialog.user?.email})
+              {t("admin.users.grantDesc")} - {grantDialog.user?.display_name} ({grantDialog.user?.email})
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Current Balance: {grantDialog.user?.credits.toLocaleString()}</Label>
+              <Label>{t("admin.users.currentBalance")}{grantDialog.user?.credits.toLocaleString()}</Label>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="grant-amount">Amount to Grant</Label>
+              <Label htmlFor="grant-amount">{t("admin.users.grantAmount")}</Label>
               <Input
                 id="grant-amount"
                 type="number"
                 min="1"
-                placeholder="Enter amount"
+                placeholder={t("admin.users.grantAmountPlaceholder")}
                 value={grantAmount}
                 onChange={(e) => setGrantAmount(e.target.value)}
               />
@@ -164,7 +165,7 @@ export default function UserManagementPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setGrantDialog({ open: false, user: null })}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleGrantCredits}
@@ -172,7 +173,7 @@ export default function UserManagementPage() {
               className="gradient-primary text-primary-foreground"
             >
               {granting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Coins className="mr-2 h-4 w-4" />}
-              Grant
+              {t("admin.users.grantBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>

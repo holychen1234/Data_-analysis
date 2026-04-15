@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useCreditTransactions } from "@/hooks/use-credits";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,16 +8,16 @@ import { Coins, TrendingUp, TrendingDown, Clock, Loader2 } from "lucide-react";
 
 export default function CreditsPage() {
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const { transactions, isLoading } = useCreditTransactions();
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">Credits</h1>
-        <p className="text-muted-foreground mt-1">View your credit balance and transaction history</p>
+        <h1 className="text-2xl font-bold">{t("credits.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("credits.subtitle")}</p>
       </div>
 
-      {/* Balance card */}
       <Card className="glass border-border/50 glow-primary">
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
@@ -24,38 +25,36 @@ export default function CreditsPage() {
               <Coins className="h-7 w-7 text-primary-foreground" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Current Balance</p>
+              <p className="text-sm text-muted-foreground">{t("credits.currentBalance")}</p>
               <p className="text-3xl font-bold">{(profile?.credits ?? 0).toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">Credits</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("common.credits")}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Pricing info */}
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { name: "Starter", credits: 100, description: "For quick analysis" },
-          { name: "Pro", credits: 500, description: "For regular users" },
-          { name: "Enterprise", credits: 2000, description: "For power users" },
+          { name: t("credits.starter"), credits: 100, description: t("credits.starterDesc") },
+          { name: t("credits.pro"), credits: 500, description: t("credits.proDesc") },
+          { name: t("credits.enterprise"), credits: 2000, description: t("credits.enterpriseDesc") },
         ].map((plan) => (
           <Card key={plan.name} className="glass border-border/50 hover:glow-primary transition-all">
             <CardContent className="p-5 text-center">
               <p className="text-sm font-medium">{plan.name}</p>
               <p className="text-2xl font-bold mt-2 text-gradient-primary">{plan.credits}</p>
-              <p className="text-xs text-muted-foreground mt-1">credits</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("common.credits")}</p>
               <p className="text-xs text-muted-foreground mt-2">{plan.description}</p>
-              <p className="text-xs text-muted-foreground mt-3 italic">Contact admin to recharge</p>
+              <p className="text-xs text-muted-foreground mt-3 italic">{t("credits.contactAdmin")}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Transaction history */}
       <Card className="glass border-border/50">
         <CardHeader>
-          <CardTitle className="text-lg">Transaction History</CardTitle>
-          <CardDescription>Your credit transactions</CardDescription>
+          <CardTitle className="text-lg">{t("credits.history")}</CardTitle>
+          <CardDescription>{t("credits.historyDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -65,16 +64,16 @@ export default function CreditsPage() {
           ) : transactions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Clock className="h-10 w-10 text-muted-foreground/30 mb-3" />
-              <p className="text-muted-foreground text-sm">No transactions yet</p>
+              <p className="text-muted-foreground text-sm">{t("credits.noTransactions")}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>{t("credits.col.type")}</TableHead>
+                  <TableHead>{t("credits.col.description")}</TableHead>
+                  <TableHead className="text-right">{t("credits.col.amount")}</TableHead>
+                  <TableHead>{t("common.date")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -85,7 +84,7 @@ export default function CreditsPage() {
                         variant={tx.amount > 0 ? "default" : "secondary"}
                         className="text-xs"
                       >
-                        {tx.type === "admin_grant" ? "Grant" : tx.type === "recharge" ? "Recharge" : "Used"}
+                        {tx.type === "admin_grant" ? t("credits.type.grant") : tx.type === "recharge" ? t("credits.type.recharge") : t("credits.type.used")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{tx.description}</TableCell>

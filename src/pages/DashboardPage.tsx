@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { useReports } from "@/hooks/use-reports";
 
 export default function DashboardPage() {
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { reports, isLoading } = useReports(5);
 
@@ -16,56 +18,36 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Welcome banner */}
       <div className="glass rounded-xl p-6 glow-primary">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold">
-              Welcome back, <span className="text-gradient-primary">{profile?.display_name || "User"}</span>
+              {t("dash.welcome")}<span className="text-gradient-primary">{profile?.display_name || t("common.user")}</span>
             </h1>
-            <p className="mt-1 text-muted-foreground">
-              Upload your data and let AI generate beautiful analysis reports
-            </p>
+            <p className="mt-1 text-muted-foreground">{t("dash.welcomeDesc")}</p>
           </div>
           <Button onClick={() => navigate("/dashboard/analysis")} className="gradient-primary text-primary-foreground shrink-0">
             <FileUp className="mr-2 h-4 w-4" />
-            New Analysis
+            {t("dash.newAnalysis")}
           </Button>
         </div>
       </div>
 
-      {/* Stats cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard
-          title="Credits Balance"
-          value={profile?.credits ?? 0}
-          icon={<Coins className="h-5 w-5" />}
-          accent="primary"
-        />
-        <StatCard
-          title="Total Reports"
-          value={totalReports}
-          icon={<FileText className="h-5 w-5" />}
-          accent="accent"
-        />
-        <StatCard
-          title="Completed"
-          value={completedReports}
-          icon={<TrendingUp className="h-5 w-5" />}
-          accent="chart-4"
-        />
+        <StatCard title={t("dash.creditsBalance")} value={profile?.credits ?? 0} icon={<Coins className="h-5 w-5" />} accent="primary" />
+        <StatCard title={t("dash.totalReports")} value={totalReports} icon={<FileText className="h-5 w-5" />} accent="accent" />
+        <StatCard title={t("dash.completed")} value={completedReports} icon={<TrendingUp className="h-5 w-5" />} accent="chart-4" />
       </div>
 
-      {/* Recent reports */}
       <Card className="glass border-border/50">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-lg">Recent Reports</CardTitle>
-            <CardDescription>Your latest analysis reports</CardDescription>
+            <CardTitle className="text-lg">{t("dash.recentReports")}</CardTitle>
+            <CardDescription>{t("dash.recentDesc")}</CardDescription>
           </div>
           {reports.length > 0 && (
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard/reports")}>
-              View All
+              {t("common.viewAll")}
             </Button>
           )}
         </CardHeader>
@@ -73,17 +55,17 @@ export default function DashboardPage() {
           {isLoading ? (
             <div className="flex items-center justify-center py-8 text-muted-foreground">
               <Clock className="mr-2 h-4 w-4 animate-spin" />
-              Loading...
+              {t("common.loading")}
             </div>
           ) : reports.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-4">
                 <BarChart3 className="h-8 w-8 text-primary" />
               </div>
-              <p className="text-muted-foreground mb-4">No reports yet. Start your first analysis!</p>
+              <p className="text-muted-foreground mb-4">{t("dash.noReports")}</p>
               <Button onClick={() => navigate("/dashboard/analysis")} variant="outline" className="border-primary/30 hover:bg-primary/10">
                 <FileUp className="mr-2 h-4 w-4" />
-                Upload Data
+                {t("dash.uploadData")}
               </Button>
             </div>
           ) : (
@@ -109,7 +91,7 @@ export default function DashboardPage() {
                     variant={report.status === "completed" ? "default" : report.status === "processing" ? "secondary" : "destructive"}
                     className="shrink-0 ml-2"
                   >
-                    {report.status}
+                    {report.status === "completed" ? t("common.completed") : report.status === "processing" ? t("common.processing") : t("common.failed")}
                   </Badge>
                 </button>
               ))}
