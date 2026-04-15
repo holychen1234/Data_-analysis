@@ -100,6 +100,7 @@ const translations = {
   "nav.credits": { zh: "积分", en: "Credits" },
   "nav.profile": { zh: "个人信息", en: "Profile" },
   "nav.main": { zh: "主菜单", en: "Main" },
+  "nav.backHome": { zh: "返回首页", en: "Back to Home" },
   "nav.adminSection": { zh: "管理", en: "Admin" },
   "nav.adminOverview": { zh: "管理概览", en: "Admin Overview" },
   "nav.manageUsers": { zh: "用户管理", en: "Manage Users" },

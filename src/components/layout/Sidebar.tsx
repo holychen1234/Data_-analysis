@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -27,6 +27,7 @@ interface NavItem {
 export function Sidebar() {
   const { profile } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const isAdmin = profile?.role === "admin";
 
@@ -53,11 +54,17 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-14 items-center gap-2 border-b border-border/50 px-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg gradient-primary">
+        <button
+          onClick={() => navigate("/")}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg gradient-primary cursor-pointer transition-transform hover:scale-105"
+          title={t("nav.backHome")}
+        >
           <BarChart3 className="h-4 w-4 text-primary-foreground" />
-        </div>
+        </button>
         {!collapsed && (
-          <span className="text-lg font-bold text-gradient-primary">{t("brand.name")}</span>
+          <button onClick={() => navigate("/")} className="text-lg font-bold text-gradient-primary hover:opacity-80 transition-opacity cursor-pointer">
+            {t("brand.name")}
+          </button>
         )}
       </div>
 
