@@ -1,18 +1,81 @@
-import Index from "./pages/Index";
+import { AppLayout } from "./components/layout/AppLayout";
+import { ProtectedRoute } from "./components/layout/ProtectedRoute";
+import AuthPage from "./pages/AuthPage";
+import DashboardPage from "./pages/DashboardPage";
+import AnalysisPage from "./pages/AnalysisPage";
+import ReportsListPage from "./pages/ReportsListPage";
+import ReportPage from "./pages/ReportPage";
+import ProfilePage from "./pages/ProfilePage";
+import CreditsPage from "./pages/CreditsPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
+import ModelManagementPage from "./pages/admin/ModelManagementPage";
+import ReportsManagementPage from "./pages/admin/ReportsManagementPage";
 import NotFound from "./pages/NotFound";
 
 export const routers = [
-    {
-      path: "/",
-      name: 'home',
-      element: <Index />,
-    },
-    /* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */
-    {
-      path: "*",
-      name: '404',
-      element: <NotFound />,
-    },
+  {
+    path: "/auth",
+    name: "auth",
+    element: <AuthPage />,
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, name: "dashboard", element: <DashboardPage /> },
+      { path: "analysis", name: "analysis", element: <AnalysisPage /> },
+      { path: "reports", name: "reports", element: <ReportsListPage /> },
+      { path: "reports/:id", name: "report-detail", element: <ReportPage /> },
+      { path: "profile", name: "profile", element: <ProfilePage /> },
+      { path: "credits", name: "credits", element: <CreditsPage /> },
+      {
+        path: "admin",
+        name: "admin",
+        element: (
+          <ProtectedRoute requireAdmin>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/users",
+        name: "admin-users",
+        element: (
+          <ProtectedRoute requireAdmin>
+            <UserManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/models",
+        name: "admin-models",
+        element: (
+          <ProtectedRoute requireAdmin>
+            <ModelManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/reports",
+        name: "admin-reports",
+        element: (
+          <ProtectedRoute requireAdmin>
+            <ReportsManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: "*",
+    name: "404",
+    element: <NotFound />,
+  },
 ];
 
 declare global {
