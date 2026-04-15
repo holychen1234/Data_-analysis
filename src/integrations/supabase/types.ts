@@ -3109,7 +3109,149 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_models: {
+        Row: {
+          cost_per_analysis: number
+          created_at: string
+          id: string
+          is_active: boolean
+          model_id: string
+          name: string
+          provider: string
+        }
+        Insert: {
+          cost_per_analysis?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model_id: string
+          name: string
+          provider: string
+        }
+        Update: {
+          cost_per_analysis?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model_id?: string
+          name?: string
+          provider?: string
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          credits: number
+          display_name: string
+          email: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          credits?: number
+          display_name?: string
+          email: string
+          id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          credits?: number
+          display_name?: string
+          email?: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          credits_used: number
+          file_name: string
+          file_url: string | null
+          id: string
+          report_data: Json | null
+          report_html: string | null
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_used?: number
+          file_name: string
+          file_url?: string | null
+          id?: string
+          report_data?: Json | null
+          report_html?: string | null
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_used?: number
+          file_name?: string
+          file_url?: string | null
+          id?: string
+          report_data?: Json | null
+          report_html?: string | null
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -73,17 +73,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        let profile: Profile | null = null;
-        if (session?.user) {
-          profile = await fetchProfile(session.user.id);
-        }
-        setState({
+      (_event, session) => {
+        setState((prev) => ({
+          ...prev,
           user: session?.user ?? null,
           session,
-          profile,
           isLoading: false,
-        });
+        }));
+        if (session?.user) {
+          setTimeout(async () => {
+            const profile = await fetchProfile(session.user.id);
+            if (profile) {
+              setState((prev) => ({ ...prev, profile }));
+            }
+          }, 0);
+        } else {
+          setState((prev) => ({ ...prev, profile: null }));
+        }
       }
     );
 
@@ -99,7 +105,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName } },
+      options: {
+        data: { display_name: displayName },
+        emailRedirectTo: `${window.location.origin}/`,
+      },
     });
     return { error: error?.message ?? null };
   };
