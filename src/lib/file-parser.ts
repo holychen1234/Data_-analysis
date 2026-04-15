@@ -17,17 +17,18 @@ export function parseFile(file: File): Promise<ParsedData> {
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array" });
+        const workbook = XLSX.read(data, { type: "array", codepage: 936 });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
-        const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
+        const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { raw: false, defval: "" });
         const headers = jsonData.length > 0 ? Object.keys(jsonData[0]) : [];
 
-        // Detect column types
+        // Detect column types from raw data
+        const rawJsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
         const columnTypes: Record<string, string> = {};
         for (const header of headers) {
-          const sampleValues = jsonData
+          const sampleValues = rawJsonData
             .slice(0, 20)
             .map((row) => row[header])
             .filter((v) => v !== null && v !== undefined && v !== "");

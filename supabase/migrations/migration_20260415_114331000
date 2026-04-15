@@ -1,0 +1,62 @@
+-- Fix recursive RLS: use security definer function to check admin
+CREATE OR REPLACE FUNCTION public.is_admin(uid UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = uid AND role = 'admin');
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- Drop old conflicting policies
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view own transactions" ON public.credit_transactions;
+DROP POLICY IF EXISTS "Users can view own reports" ON public.reports;
+DROP POLICY IF EXISTS "Users can delete own reports" ON public.reports;
+DROP POLICY IF EXISTS "Admins can view all reports" ON public.reports;
+DROP POLICY IF EXISTS "Anyone can view active models" ON public.ai_models;
+DROP POLICY IF EXISTS "Admins can manage models" ON public.ai_models;
+
+-- Profiles policies (non-recursive)
+CREATE POLICY "profiles_select_own" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "profiles_select_admin" ON public.profiles
+  FOR SELECT USING (public.is_admin(auth.uid()));
+
+CREATE POLICY "profiles_update_own" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "profiles_update_admin" ON public.profiles
+  FOR UPDATE USING (public.is_admin(auth.uid()));
+
+-- Credit transactions
+CREATE POLICY "credit_tx_select_own" ON public.credit_transactions
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "credit_tx_select_admin" ON public.credit_transactions
+  FOR SELECT USING (public.is_admin(auth.uid()));
+
+CREATE POLICY "credit_tx_insert_admin" ON public.credit_transactions
+  FOR INSERT WITH CHECK (public.is_admin(auth.uid()));
+
+-- Reports policies
+CREATE POLICY "reports_select_own" ON public.reports
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "reports_insert_own" ON public.reports
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "reports_update_own" ON public.reports
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "reports_delete_own" ON public.reports
+  FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "reports_select_admin" ON public.reports
+  FOR SELECT USING (public.is_admin(auth.uid()));
+
+-- AI models policies
+CREATE POLICY "models_select_active" ON public.ai_models
+  FOR SELECT USING (is_active = true);
+
+CREATE POLICY "models_all_admin" ON public.ai_models
+  FOR ALL USING (public.is_admin(auth.uid()));
