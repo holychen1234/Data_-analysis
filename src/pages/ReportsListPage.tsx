@@ -4,10 +4,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Trash2, Eye, FileUp, Loader2 } from "lucide-react";
+import { FileText, Trash2, Eye, FileUp, Loader2, Clock, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { useReports } from "@/hooks/use-reports";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+
+const RETENTION_DAYS = 14;
+
+function getDaysRemaining(createdAt: string): number {
+  const created = new Date(createdAt);
+  const expiry = new Date(created.getTime() + RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const diff = expiry.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
 
 export default function ReportsListPage() {
   const navigate = useNavigate();
@@ -27,21 +37,32 @@ export default function ReportsListPage() {
     }
   };
 
-  const statusVariant = (status: string) => {
+  const statusConfig = (status: string) => {
     switch (status) {
-      case "completed": return "default" as const;
-      case "processing": return "secondary" as const;
-      case "failed": return "destructive" as const;
-      default: return "secondary" as const;
-    }
-  };
-
-  const statusLabel = (status: string) => {
-    switch (status) {
-      case "completed": return t("common.completed");
-      case "processing": return t("common.processing");
-      case "failed": return t("common.failed");
-      default: return status;
+      case "completed":
+        return {
+          variant: "success" as const,
+          icon: <CheckCircle className="h-3 w-3 mr-1" />,
+          label: t("common.completed"),
+        };
+      case "processing":
+        return {
+          variant: "warning" as const,
+          icon: <RefreshCw className="h-3 w-3 mr-1 animate-spin" />,
+          label: t("common.processing"),
+        };
+      case "failed":
+        return {
+          variant: "danger" as const,
+          icon: <AlertCircle className="h-3 w-3 mr-1" />,
+          label: t("common.failed"),
+        };
+      default:
+        return {
+          variant: "secondary" as const,
+          icon: null,
+          label: status,
+        };
     }
   };
 
@@ -56,6 +77,11 @@ export default function ReportsListPage() {
           <FileUp className="mr-2 h-4 w-4" />
           {t("nav.newAnalysis")}
         </Button>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-2.5 text-sm text-amber-400">
+        <Clock className="h-4 w-4 shrink-0" />
+        {t("reports.retentionNotice")}
       </div>
 
       <Card className="glass border-border/50">
@@ -81,42 +107,59 @@ export default function ReportsListPage() {
                   <TableHead>{t("common.status")}</TableHead>
                   <TableHead>{t("reports.col.credits")}</TableHead>
                   <TableHead>{t("common.date")}</TableHead>
+                  <TableHead>{t("reports.col.retention")}</TableHead>
                   <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reports.map((report) => (
-                  <TableRow
-                    key={report.id}
-                    className="cursor-pointer hover:bg-secondary/30"
-                    onClick={() => navigate(`/dashboard/reports/${report.id}`)}
-                  >
-                    <TableCell className="font-medium">{report.title}</TableCell>
-                    <TableCell className="text-muted-foreground">{report.file_name}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(report.status)}>{statusLabel(report.status)}</Badge>
-                    </TableCell>
-                    <TableCell>{report.credits_used}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(report.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={(e) => handleDelete(report.id, e)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {reports.map((report) => {
+                  const status = statusConfig(report.status);
+                  const daysLeft = getDaysRemaining(report.created_at);
+                  const isUrgent = daysLeft <= 3;
+
+                  return (
+                    <TableRow
+                      key={report.id}
+                      className="cursor-pointer hover:bg-secondary/30"
+                      onClick={() => navigate(`/dashboard/reports/${report.id}`)}
+                    >
+                      <TableCell className="font-medium max-w-[200px] truncate">{report.title}</TableCell>
+                      <TableCell className="text-muted-foreground max-w-[160px] truncate">{report.file_name}</TableCell>
+                      <TableCell>
+                        <Badge variant={status.variant} className="inline-flex items-center whitespace-nowrap">
+                          {status.icon}
+                          {status.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{report.credits_used}</TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
+                        {new Date(report.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`text-sm whitespace-nowrap ${isUrgent ? "text-red-400 font-medium" : "text-muted-foreground"}`}>
+                          {daysLeft > 0
+                            ? `${daysLeft} ${t("reports.daysLeft")}`
+                            : t("reports.expired")}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={(e) => handleDelete(report.id, e)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

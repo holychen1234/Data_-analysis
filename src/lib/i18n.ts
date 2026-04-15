@@ -156,6 +156,10 @@ const translations = {
   "reports.col.title": { zh: "标题", en: "Title" },
   "reports.col.file": { zh: "文件", en: "File" },
   "reports.col.credits": { zh: "积分", en: "Credits" },
+  "reports.col.retention": { zh: "剩余时间", en: "Remaining" },
+  "reports.retentionNotice": { zh: "报告将保留 14 天，到期后自动删除。请及时导出重要报告。", en: "Reports are retained for 14 days and will be auto-deleted after expiry. Please export important reports in time." },
+  "reports.daysLeft": { zh: "天后删除", en: "days left" },
+  "reports.expired": { zh: "即将删除", en: "Expiring soon" },
 
   // Report detail
   "report.notFound": { zh: "未找到报告", en: "Report not found" },
