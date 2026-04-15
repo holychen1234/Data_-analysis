@@ -3111,31 +3111,46 @@ export type Database = {
     Tables: {
       ai_models: {
         Row: {
+          api_endpoint: string
+          api_key_env: string
           cost_per_analysis: number
           created_at: string
+          description: string
           id: string
           is_active: boolean
+          max_tokens: number
           model_id: string
           name: string
           provider: string
+          temperature: number
         }
         Insert: {
+          api_endpoint?: string
+          api_key_env?: string
           cost_per_analysis?: number
           created_at?: string
+          description?: string
           id?: string
           is_active?: boolean
+          max_tokens?: number
           model_id: string
           name: string
           provider: string
+          temperature?: number
         }
         Update: {
+          api_endpoint?: string
+          api_key_env?: string
           cost_per_analysis?: number
           created_at?: string
+          description?: string
           id?: string
           is_active?: boolean
+          max_tokens?: number
           model_id?: string
           name?: string
           provider?: string
+          temperature?: number
         }
         Relationships: []
       }

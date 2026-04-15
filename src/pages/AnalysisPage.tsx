@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +9,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { FileUp, X, FileSpreadsheet, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUp, X, FileSpreadsheet, Loader2, Sparkles, AlertCircle, BrainCircuit, CheckCircle2 } from "lucide-react";
 import { parseFile, isValidFileType, type ParsedData } from "@/lib/file-parser";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 type AnalysisStep = "upload" | "configure" | "processing" | "done";
+
+interface AIModel {
+  id: string;
+  name: string;
+  provider: string;
+  model_id: string;
+  description: string;
+  cost_per_analysis: number;
+}
 
 export default function AnalysisPage() {
   const { profile, refreshProfile } = useAuth();
@@ -27,6 +38,23 @@ export default function AnalysisPage() {
   const [parseError, setParseError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [reportId, setReportId] = useState<string | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<string>("");
+
+  const { data: models } = useQuery({
+    queryKey: ["active-models"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ai_models")
+        .select("id, name, provider, model_id, description, cost_per_analysis")
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as AIModel[];
+    },
+  });
+
+  const selectedModel = models?.find((m) => m.id === selectedModelId) || models?.[0];
+  const costPerAnalysis = selectedModel?.cost_per_analysis ?? 10;
 
   const handleFile = useCallback(async (f: File) => {
     setParseError(null);
@@ -42,11 +70,14 @@ export default function AnalysisPage() {
       setFile(f);
       const data = await parseFile(f);
       setParsedData(data);
+      if (models && models.length > 0 && !selectedModelId) {
+        setSelectedModelId(models[0].id);
+      }
       setStep("configure");
     } catch (err) {
       setParseError(err instanceof Error ? err.message : "Failed to parse file");
     }
-  }, [t]);
+  }, [t, models, selectedModelId]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -61,7 +92,7 @@ export default function AnalysisPage() {
   const handleSubmit = async () => {
     if (!parsedData || !file || !profile) return;
 
-    if ((profile.credits ?? 0) < 10) {
+    if ((profile.credits ?? 0) < costPerAnalysis) {
       toast({
         title: t("analysis.insufficientCredits"),
         description: t("analysis.insufficientCreditsDesc"),
@@ -86,6 +117,7 @@ export default function AnalysisPage() {
           rows: dataSubset,
           summary: parsedData.summary,
           requirements: requirements || t("analysis.defaultReq"),
+          model_id: selectedModel?.id,
         },
       });
 
@@ -99,10 +131,7 @@ export default function AnalysisPage() {
       await refreshProfile();
       setStep("done");
 
-      toast({
-        title: t("analysis.complete"),
-        description: t("analysis.completeDesc"),
-      });
+      toast({ title: t("analysis.complete"), description: t("analysis.completeDesc") });
     } catch (err) {
       setStep("configure");
       toast({
@@ -186,7 +215,7 @@ export default function AnalysisPage() {
                   <div>
                     <p className="text-sm font-medium">{file?.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {parsedData.summary.totalRows} rows x {parsedData.summary.totalColumns} columns
+                      {parsedData.summary.totalRows} {t("analysis.rows")} x {parsedData.summary.totalColumns} {t("analysis.cols")}
                     </p>
                   </div>
                 </div>
@@ -213,6 +242,40 @@ export default function AnalysisPage() {
               <CardDescription>{t("analysis.requirementsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Model Selection */}
+              {models && models.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <BrainCircuit className="h-4 w-4 text-primary" />
+                    {t("analysis.selectModel")}
+                  </Label>
+                  <Select
+                    value={selectedModelId || models[0]?.id}
+                    onValueChange={setSelectedModelId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {models.map((model) => (
+                        <SelectItem key={model.id} value={model.id}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{model.name}</span>
+                            <span className="text-xs text-muted-foreground">({model.provider})</span>
+                            <Badge variant="outline" className="ml-1 text-xs">
+                              {model.cost_per_analysis} {t("common.credits")}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedModel?.description && (
+                    <p className="text-xs text-muted-foreground pl-6">{selectedModel.description}</p>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="requirements">{t("analysis.requirementsLabel")}</Label>
                 <Textarea
@@ -223,12 +286,16 @@ export default function AnalysisPage() {
                   rows={4}
                 />
               </div>
+
               <div className="flex items-center justify-between rounded-lg bg-primary/5 p-3">
-                <span className="text-sm text-muted-foreground">{t("analysis.cost")}</span>
+                <span className="text-sm text-muted-foreground">
+                  {t("analysis.costLabel")}{costPerAnalysis} {t("common.credits")}
+                </span>
                 <span className="text-sm font-medium">
                   {t("analysis.balance")}{profile?.credits ?? 0} {t("common.credits")}
                 </span>
               </div>
+
               <Button onClick={handleSubmit} className="w-full gradient-primary text-primary-foreground">
                 <Sparkles className="mr-2 h-4 w-4" />
                 {t("analysis.startAI")}
@@ -251,17 +318,17 @@ export default function AnalysisPage() {
               <p className="text-sm text-muted-foreground mt-1">{t("analysis.generating")}</p>
             </div>
             <Progress value={progress} className="h-2" />
-            <p className="text-xs text-muted-foreground">{progress}%</p>
+            <p className="text-xs text-muted-foreground">{Math.round(progress)}%</p>
           </CardContent>
         </Card>
       )}
 
       {step === "done" && (
-        <Card className="glass border-border/50">
+        <Card className="glass border-border/50 glow-primary">
           <CardContent className="p-8 text-center space-y-6">
             <div className="flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-chart-4/20">
-                <Sparkles className="h-8 w-8 text-chart-4" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/20">
+                <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
             </div>
             <div>
@@ -269,11 +336,14 @@ export default function AnalysisPage() {
               <p className="text-sm text-muted-foreground mt-1">{t("analysis.completeDesc")}</p>
             </div>
             <div className="flex gap-3 justify-center">
-              <Button onClick={() => navigate(`/dashboard/reports/${reportId}`)} className="gradient-primary text-primary-foreground">
-                {t("analysis.viewReport")}
-              </Button>
-              <Button variant="outline" onClick={resetAnalysis}>
+              <Button onClick={resetAnalysis} variant="outline">
                 {t("analysis.newAnalysis")}
+              </Button>
+              <Button
+                onClick={() => navigate(`/dashboard/reports/${reportId}`)}
+                className="gradient-primary text-primary-foreground"
+              >
+                {t("analysis.viewReport")}
               </Button>
             </div>
           </CardContent>

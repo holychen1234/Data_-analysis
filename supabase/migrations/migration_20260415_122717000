@@ -1,0 +1,7 @@
+ALTER TABLE public.ai_models ADD COLUMN IF NOT EXISTS api_endpoint TEXT NOT NULL DEFAULT 'https://api.enter.pro/code/api/v1/ai/messages';
+ALTER TABLE public.ai_models ADD COLUMN IF NOT EXISTS api_key_env TEXT NOT NULL DEFAULT 'AI_API_TOKEN_29132ba50817';
+ALTER TABLE public.ai_models ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.ai_models ADD COLUMN IF NOT EXISTS max_tokens INTEGER NOT NULL DEFAULT 8000;
+ALTER TABLE public.ai_models ADD COLUMN IF NOT EXISTS temperature NUMERIC(3,2) NOT NULL DEFAULT 0.3;
+
+UPDATE public.ai_models SET description = 'Anthropic旗舰分析模型，擅长数据分析和结构化输出', api_endpoint = 'https://api.enter.pro/code/api/v1/ai/messages', api_key_env = 'AI_API_TOKEN_29132ba50817' WHERE model_id = 'anthropic/claude-sonnet-4.5';
