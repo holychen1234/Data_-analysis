@@ -160,7 +160,9 @@ const translations = {
   // Report detail
   "report.notFound": { zh: "未找到报告", en: "Report not found" },
   "report.backToReports": { zh: "返回报告列表", en: "Back to Reports" },
+  "report.export": { zh: "导出报告", en: "Export Report" },
   "report.exportHTML": { zh: "导出 HTML", en: "Export HTML" },
+  "report.exportPDF": { zh: "导出 PDF", en: "Export PDF" },
   "report.stillProcessing": { zh: "分析仍在处理中...", en: "Analysis is still processing..." },
   "report.failedRetry": { zh: "分析失败，请重试。", en: "Analysis failed. Please try again." },
   "report.summary": { zh: "分析摘要", en: "Analysis Summary" },

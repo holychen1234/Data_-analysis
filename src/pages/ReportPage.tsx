@@ -4,9 +4,15 @@ import { useReport } from "@/hooks/use-reports";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ArrowLeft, Download, FileText, FileCode, Loader2 } from "lucide-react";
 import { ReportViewer } from "@/components/report/ReportViewer";
-import { exportReportAsHtml } from "@/components/report/ReportExporter";
+import { exportReportAsHtml, exportReportAsPdf } from "@/components/report/ReportExporter";
 
 export default function ReportPage() {
   const { id } = useParams<{ id: string }>();
@@ -63,14 +69,24 @@ export default function ReportPage() {
           </div>
         </div>
         {report.status === "completed" && (
-          <Button
-            variant="outline"
-            onClick={() => exportReportAsHtml(report)}
-            className="border-primary/30 hover:bg-primary/10"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {t("report.exportHTML")}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="border-primary/30 hover:bg-primary/10">
+                <Download className="mr-2 h-4 w-4" />
+                {t("report.export")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => exportReportAsHtml(report)}>
+                <FileCode className="mr-2 h-4 w-4" />
+                {t("report.exportHTML")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportReportAsPdf(report)}>
+                <FileText className="mr-2 h-4 w-4" />
+                {t("report.exportPDF")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 

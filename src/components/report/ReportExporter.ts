@@ -1,18 +1,20 @@
 import type { Report } from "@/hooks/use-reports";
 
-export function exportReportAsHtml(report: Report) {
+interface ReportDataShape {
+  title?: string;
+  summary?: string;
+  stats?: Array<{ label: string; value: string | number; change?: string }>;
+  insights?: string[];
+  tables?: Array<{ title: string; headers: string[]; rows: (string | number)[][] }>;
+}
+
+function buildHtmlContent(report: Report): string {
   const reportData = report.report_data as Record<string, unknown> | null;
-  if (!reportData) return;
+  if (!reportData) return "";
 
-  const data = reportData as {
-    title?: string;
-    summary?: string;
-    stats?: Array<{ label: string; value: string | number; change?: string }>;
-    insights?: string[];
-    tables?: Array<{ title: string; headers: string[]; rows: (string | number)[][] }>;
-  };
+  const data = reportData as unknown as ReportDataShape;
 
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -26,6 +28,21 @@ export function exportReportAsHtml(report: Report) {
       color: #e2e8f0;
       line-height: 1.6;
       padding: 2rem;
+    }
+    @media print {
+      body { background: white; color: #1a1a2e; padding: 1rem; }
+      .card { background: #f8f9fa; border-color: #e2e8f0; break-inside: avoid; }
+      .stat { background: #f8f9fa; border-color: #e2e8f0; }
+      h1 { background: none; -webkit-text-fill-color: #1a1a2e; color: #1a1a2e; }
+      .card h2 { background: none; -webkit-text-fill-color: #2563eb; color: #2563eb; }
+      .meta, .stat .label, p, .insight-list li span { color: #4a5568 !important; }
+      .stat .value { color: #1a1a2e !important; }
+      .stat .change { color: #059669 !important; }
+      th { color: #4a5568 !important; }
+      td { color: #1a1a2e !important; }
+      th, td { border-bottom-color: #e2e8f0 !important; }
+      .insight-num { background: #2563eb !important; }
+      .footer { color: #9ca3af !important; border-top-color: #e2e8f0 !important; }
     }
     .container { max-width: 1000px; margin: 0 auto; }
     h1 {
@@ -129,14 +146,39 @@ export function exportReportAsHtml(report: Report) {
   </div>
 </body>
 </html>`;
+}
 
-  const blob = new Blob([html], { type: "text/html" });
+function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${report.title.replace(/\s+/g, "_")}_report.html`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+export function exportReportAsHtml(report: Report) {
+  const html = buildHtmlContent(report);
+  if (!html) return;
+  const blob = new Blob([html], { type: "text/html" });
+  downloadBlob(blob, `${report.title.replace(/\s+/g, "_")}_report.html`);
+}
+
+export function exportReportAsPdf(report: Report) {
+  const html = buildHtmlContent(report);
+  if (!html) return;
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+
+  printWindow.onload = () => {
+    setTimeout(() => {
+      printWindow.print();
+    }, 300);
+  };
 }
