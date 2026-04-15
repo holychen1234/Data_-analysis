@@ -9,21 +9,18 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const AI_API_TOKEN = Deno.env.get("AI_API_TOKEN");
+    const AI_API_TOKEN = Deno.env.get("AI_API_TOKEN_29132ba50817");
     if (!AI_API_TOKEN) {
       throw new Error("AI_API_TOKEN is not configured");
     }
 
-    // Get user from auth
     const authHeader = req.headers.get("authorization");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Import supabase client
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user from JWT
     const token = authHeader?.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
@@ -33,7 +30,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check credits
     const { data: profile } = await supabase
       .from("profiles")
       .select("credits")
@@ -49,7 +45,6 @@ Deno.serve(async (req) => {
 
     const { file_name, headers, rows, summary, requirements } = await req.json();
 
-    // Create report record
     const reportTitle = `Analysis of ${file_name}`;
     const { data: report, error: reportError } = await supabase
       .from("reports")
@@ -65,7 +60,6 @@ Deno.serve(async (req) => {
 
     if (reportError) throw reportError;
 
-    // Build the prompt for AI
     const dataPreview = JSON.stringify(rows.slice(0, 30), null, 2);
     const prompt = `You are a professional data analyst. Analyze the following dataset and return a detailed analysis report as a JSON object.
 
@@ -121,42 +115,37 @@ Requirements:
 - For pie charts, use "nameKey" and "valueKey" instead of "xKey"/"yKeys"
 - Return ONLY the JSON object, nothing else`;
 
-    // Call AI API (non-streaming for structured output)
-    const aiResponse = await fetch(
-      `${Deno.env.get("ENTER_API_BASE_URL") || "https://api.enter.dev"}/code/api/v1/ai/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${AI_API_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "anthropic/claude-sonnet-4.5",
-          messages: [{ role: "user", content: prompt }],
-          stream: false,
-          max_tokens: 8000,
-          temperature: 0.3,
-        }),
-      }
-    );
+    console.log("Calling AI API for analysis...");
+
+    const aiResponse = await fetch("https://api.enter.pro/code/api/v1/ai/messages", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${AI_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "anthropic/claude-sonnet-4.5",
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+        max_tokens: 8000,
+        temperature: 0.3,
+      }),
+    });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("AI API error:", errorText);
-
-      // Update report as failed
+      console.error("AI API error:", aiResponse.status, errorText);
       await supabase.from("reports").update({ status: "failed" }).eq("id", report.id);
-
       throw new Error("AI analysis failed. Please try again.");
     }
 
     const aiData = await aiResponse.json();
+    console.log("AI response received successfully");
+    
     const textContent = aiData.content?.find((c: { type: string }) => c.type === "text")?.text || "";
 
-    // Parse the JSON response from AI
     let reportData;
     try {
-      // Try to extract JSON from the response (handle possible markdown code blocks)
       const jsonMatch = textContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         reportData = JSON.parse(jsonMatch[0]);
@@ -164,12 +153,11 @@ Requirements:
         throw new Error("No JSON found in AI response");
       }
     } catch (parseError) {
-      console.error("Failed to parse AI response:", textContent);
+      console.error("Failed to parse AI response:", textContent.substring(0, 500));
       await supabase.from("reports").update({ status: "failed" }).eq("id", report.id);
       throw new Error("Failed to parse analysis results");
     }
 
-    // Update report with results
     await supabase
       .from("reports")
       .update({
@@ -179,19 +167,19 @@ Requirements:
       })
       .eq("id", report.id);
 
-    // Deduct credits
     await supabase
       .from("profiles")
       .update({ credits: profile.credits - 10 })
       .eq("id", user.id);
 
-    // Record transaction
     await supabase.from("credit_transactions").insert({
       user_id: user.id,
       amount: -10,
       type: "consume",
       description: `Analysis: ${reportTitle}`,
     });
+
+    console.log("Report completed:", report.id);
 
     return new Response(
       JSON.stringify({ report_id: report.id, status: "completed" }),

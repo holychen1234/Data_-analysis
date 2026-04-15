@@ -91,7 +91,8 @@ export default function AnalysisPage() {
 
       clearInterval(progressInterval);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message || t("analysis.failed"));
+      if (data?.error) throw new Error(data.error);
 
       setProgress(100);
       setReportId(data.report_id);

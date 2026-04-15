@@ -15,7 +15,6 @@ Deno.serve(async (req) => {
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get admin user from JWT
     const authHeader = req.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
@@ -26,7 +25,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check admin role
     const { data: adminProfile } = await supabase
       .from("profiles")
       .select("role")
@@ -49,7 +47,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get target user profile
     const { data: targetProfile } = await supabase
       .from("profiles")
       .select("credits, display_name")
@@ -63,14 +60,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Update credits
     const newCredits = targetProfile.credits + amount;
     await supabase
       .from("profiles")
       .update({ credits: newCredits })
       .eq("id", user_id);
 
-    // Record transaction
     await supabase.from("credit_transactions").insert({
       user_id,
       amount,
