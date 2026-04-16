@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 interface DataTableProps {
   table: {
     title: string;
+    description?: string;
     headers: string[];
     rows: (string | number)[][];
   };
@@ -12,8 +13,11 @@ interface DataTableProps {
 export function DataTableView({ table }: DataTableProps) {
   return (
     <Card className="glass border-border/50">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="text-base">{table.title}</CardTitle>
+        {table.description && (
+          <p className="text-xs text-muted-foreground mt-1">{table.description}</p>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">

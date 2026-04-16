@@ -181,6 +181,7 @@ const translations = {
   "report.failedRetry": { zh: "分析失败，请重试。", en: "Analysis failed. Please try again." },
   "report.summary": { zh: "分析摘要", en: "Analysis Summary" },
   "report.keyInsights": { zh: "关键洞察", en: "Key Insights" },
+  "report.recommendations": { zh: "改进建议", en: "Recommendations" },
 
   // Credits
   "credits.title": { zh: "积分", en: "Credits" },
