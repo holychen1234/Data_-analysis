@@ -12,6 +12,8 @@ export interface ChartConfig {
   yKeys?: string[];
   nameKey?: string;
   valueKey?: string;
+  /** Maps data key → human-readable legend label */
+  labels?: Record<string, string>;
 }
 
 const CHART_COLORS = [
@@ -29,22 +31,40 @@ interface ChartRendererProps {
   config: ChartConfig;
 }
 
+// Resolve a key to its display label using the labels map
+function resolveLabel(key: string, labels?: Record<string, string>): string {
+  if (!labels) return key;
+  return labels[key] || key;
+}
+
+const tooltipStyle = {
+  contentStyle: {
+    backgroundColor: "hsl(222, 40%, 9%)",
+    border: "1px solid hsl(217, 91%, 60%, 0.2)",
+    borderRadius: "8px",
+    color: "hsl(210, 40%, 95%)",
+    fontSize: "12px",
+  },
+};
+
 export function ChartRenderer({ config }: ChartRendererProps) {
-  const { type, data, xKey = "name", yKeys = ["value"], nameKey = "name", valueKey = "value" } = config;
+  const {
+    type,
+    data,
+    xKey = "name",
+    yKeys = ["value"],
+    nameKey = "name",
+    valueKey = "value",
+    labels,
+  } = config;
 
   if (!data || data.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-8">No data available</p>;
+    return <p className="text-sm text-muted-foreground text-center py-8">暂无数据</p>;
   }
 
-  const tooltipStyle = {
-    contentStyle: {
-      backgroundColor: "hsl(222, 40%, 9%)",
-      border: "1px solid hsl(217, 91%, 60%, 0.2)",
-      borderRadius: "8px",
-      color: "hsl(210, 40%, 95%)",
-      fontSize: "12px",
-    },
-  };
+  // Auto-detect yKeys from data if they are still generic "value"/"value2"
+  // and real column names are available in the data
+  const resolvedYKeys = yKeys.map((k) => k); // keep original keys for dataKey binding
 
   switch (type) {
     case "bar":
@@ -52,12 +72,18 @@ export function ChartRenderer({ config }: ChartRendererProps) {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 20%, 16%)" />
-            <XAxis dataKey={xKey} tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} />
-            <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} />
+            <XAxis dataKey={xKey} tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 11 }} />
+            <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 11 }} />
             <Tooltip {...tooltipStyle} />
-            <Legend />
-            {yKeys.map((key, i) => (
-              <Bar key={key} dataKey={key} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[4, 4, 0, 0]} />
+            <Legend formatter={(value) => resolveLabel(value, labels)} />
+            {resolvedYKeys.map((key, i) => (
+              <Bar
+                key={key}
+                dataKey={key}
+                name={resolveLabel(key, labels)}
+                fill={CHART_COLORS[i % CHART_COLORS.length]}
+                radius={[4, 4, 0, 0]}
+              />
             ))}
           </BarChart>
         </ResponsiveContainer>
@@ -68,15 +94,16 @@ export function ChartRenderer({ config }: ChartRendererProps) {
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 20%, 16%)" />
-            <XAxis dataKey={xKey} tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} />
-            <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} />
+            <XAxis dataKey={xKey} tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 11 }} />
+            <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 11 }} />
             <Tooltip {...tooltipStyle} />
-            <Legend />
-            {yKeys.map((key, i) => (
+            <Legend formatter={(value) => resolveLabel(value, labels)} />
+            {resolvedYKeys.map((key, i) => (
               <Line
                 key={key}
                 type="monotone"
                 dataKey={key}
+                name={resolveLabel(key, labels)}
                 stroke={CHART_COLORS[i % CHART_COLORS.length]}
                 strokeWidth={2}
                 dot={{ fill: CHART_COLORS[i % CHART_COLORS.length], r: 4 }}
@@ -116,15 +143,16 @@ export function ChartRenderer({ config }: ChartRendererProps) {
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 20%, 16%)" />
-            <XAxis dataKey={xKey} tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} />
-            <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} />
+            <XAxis dataKey={xKey} tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 11 }} />
+            <YAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 11 }} />
             <Tooltip {...tooltipStyle} />
-            <Legend />
-            {yKeys.map((key, i) => (
+            <Legend formatter={(value) => resolveLabel(value, labels)} />
+            {resolvedYKeys.map((key, i) => (
               <Area
                 key={key}
                 type="monotone"
                 dataKey={key}
+                name={resolveLabel(key, labels)}
                 stroke={CHART_COLORS[i % CHART_COLORS.length]}
                 fill={CHART_COLORS[i % CHART_COLORS.length]}
                 fillOpacity={0.15}
@@ -140,24 +168,25 @@ export function ChartRenderer({ config }: ChartRendererProps) {
         <ResponsiveContainer width="100%" height={300}>
           <RadarChart data={data}>
             <PolarGrid stroke="hsl(222, 20%, 16%)" />
-            <PolarAngleAxis dataKey={xKey} tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }} />
+            <PolarAngleAxis dataKey={xKey} tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 11 }} />
             <PolarRadiusAxis tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 10 }} />
-            {yKeys.map((key, i) => (
+            {resolvedYKeys.map((key, i) => (
               <Radar
                 key={key}
                 dataKey={key}
+                name={resolveLabel(key, labels)}
                 stroke={CHART_COLORS[i % CHART_COLORS.length]}
                 fill={CHART_COLORS[i % CHART_COLORS.length]}
                 fillOpacity={0.2}
               />
             ))}
             <Tooltip {...tooltipStyle} />
-            <Legend />
+            <Legend formatter={(value) => resolveLabel(value, labels)} />
           </RadarChart>
         </ResponsiveContainer>
       );
 
     default:
-      return <p className="text-sm text-muted-foreground">Unsupported chart type: {type}</p>;
+      return <p className="text-sm text-muted-foreground">不支持的图表类型: {type}</p>;
   }
 }

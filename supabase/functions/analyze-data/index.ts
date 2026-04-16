@@ -13,7 +13,6 @@ function computeColumnStats(headers: string[], rows: Record<string, unknown>[]) 
       .filter((v) => !isNaN(v));
 
     if (numericValues.length > values.length * 0.5) {
-      // Numeric column
       const sorted = [...numericValues].sort((a, b) => a - b);
       const sum = sorted.reduce((a, b) => a + b, 0);
       const mean = sum / sorted.length;
@@ -35,7 +34,6 @@ function computeColumnStats(headers: string[], rows: Record<string, unknown>[]) 
         q3: sorted[Math.floor(sorted.length * 0.75)],
       };
     } else {
-      // Categorical column
       const freq: Record<string, number> = {};
       for (const v of values) {
         const key = String(v);
@@ -81,7 +79,6 @@ Deno.serve(async (req) => {
 
     const { file_name, headers, rows, summary, requirements, model_id } = await req.json();
 
-    // Fetch model config
     let modelConfig;
     if (model_id) {
       const { data } = await supabase
@@ -110,7 +107,6 @@ Deno.serve(async (req) => {
 
     const costPerAnalysis = modelConfig.cost_per_analysis || 100;
 
-    // Check credits
     const { data: profile } = await supabase
       .from("profiles")
       .select("credits")
@@ -124,7 +120,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create report
     const reportTitle = `${file_name} 分析报告`;
     const { data: report, error: reportError } = await supabase
       .from("reports")
@@ -140,23 +135,18 @@ Deno.serve(async (req) => {
 
     if (reportError) throw reportError;
 
-    // ── Pre-compute statistics ──────────────────────────────────────────────
     const columnStats = computeColumnStats(headers, rows);
-
-    // Send up to 100 rows as sample
     const sampleRows = rows.slice(0, 100);
-
-    // Identify numeric and categorical columns
     const numericCols = headers.filter((h: string) => (columnStats[h] as Record<string, unknown>)?.type === "numeric");
     const categoricalCols = headers.filter((h: string) => (columnStats[h] as Record<string, unknown>)?.type === "categorical");
 
-    // ── Build prompt ────────────────────────────────────────────────────────
     const systemPrompt = `You are an expert data analyst. Your job is to analyze datasets and produce accurate, insightful reports in a specific JSON format. You MUST:
 - Use the pre-computed statistics provided — do NOT re-estimate or round numbers differently
 - Generate charts using actual data values from column statistics or sample rows
 - Provide actionable, specific insights (not generic statements)
 - Always respond with ONLY a valid JSON object — no markdown, no explanation, no code blocks
-- All text fields (summary, labels, insights) should be written in Chinese (中文)`;
+- All text fields (summary, labels, insights) should be written in Chinese (中文)
+- CRITICAL: In chart data objects, use actual column names as keys, NEVER use generic names like "value", "value2", "count", etc.`;
 
     const userPrompt = `## 数据集信息
 - 文件名: ${file_name}
@@ -193,12 +183,13 @@ ${requirements || "请进行全面的数据分析，包括基本统计、分布�
       "type": "bar | line | pie | area",
       "description": "该图表揭示了什么规律",
       "data": [
-        { "name": "类别名", "value": 数字, "value2": 数字 }
+        { "name": "类别名或X轴值", "实际列名A": 数字, "实际列名B": 数字 }
       ],
       "xKey": "name",
-      "yKeys": ["value"],
+      "yKeys": ["实际列名A", "实际列名B"],
       "nameKey": "name",
-      "valueKey": "value"
+      "valueKey": "实际列名A",
+      "labels": { "实际列名A": "图例显示名称A", "实际列名B": "图例显示名称B" }
     }
   ],
   "tables": [
@@ -222,10 +213,12 @@ ${requirements || "请进行全面的数据分析，包括基本统计、分布�
 ## 规范要求
 - stats: 生成 4-7 个核心指标，直接使用预计算中的精确值
 - charts: 生成 3-5 个图表
+  - 【重要】data 中的字段名必须使用真实有意义的列名，禁止使用 "value"、"value2" 等通用占位符
+  - 例如数据有"销售额"和"库存"列，则 data 应为 { "name": "产品A", "销售额": 100, "库存": 50 }，yKeys 为 ["销售额", "库存"]
+  - labels 字段提供每个 yKey 的友好显示名称（用于图例和Tooltip）
   - 对于数值型列：使用 bar 或 line 图展示分布/趋势
   - 对于分类型列：使用 pie 或 bar 图展示构成比例，数据来自 top_values
-  - 多系列图表：yKeys 可包含多个字段（如 ["value", "value2"]），data 中需包含对应字段
-  - pie 图的 data 必须使用 nameKey 和 valueKey
+  - pie 图的 data 必须使用 nameKey 和 valueKey，valueKey 也必须是真实列名
   - 每个图表的 data 数组最多 20 个数据点
 - tables: 生成 1-3 个表格，展示关键汇总数据
 - insights: 5-8 条洞察，每条必须包含具体数字
@@ -256,7 +249,7 @@ ${requirements || "请进行全面的数据分析，包括基本统计、分布�
         messages: [{ role: "user", content: userPrompt }],
         stream: false,
         max_tokens: modelConfig.max_tokens || 8000,
-        temperature: 0.1, // Low temperature for accurate, deterministic output
+        temperature: 0.1,
       }),
     });
 
@@ -278,7 +271,6 @@ ${requirements || "请进行全面的数据分析，包括基本统计、分布�
 
     let reportData;
     try {
-      // Strip any markdown code blocks if present
       const cleaned = textContent
         .replace(/^```json\s*/i, "")
         .replace(/^```\s*/i, "")
@@ -297,7 +289,6 @@ ${requirements || "请进行全面的数据分析，包括基本统计、分布�
       throw new Error("解析分析结果失败，请重试。");
     }
 
-    // Save report
     await supabase
       .from("reports")
       .update({
@@ -307,7 +298,6 @@ ${requirements || "请进行全面的数据分析，包括基本统计、分布�
       })
       .eq("id", report.id);
 
-    // Deduct credits
     await supabase
       .from("profiles")
       .update({ credits: profile.credits - costPerAnalysis })
