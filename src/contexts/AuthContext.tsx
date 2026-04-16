@@ -59,10 +59,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    const subscribeToProfile = (userId: string) => {
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
+      realtimeChannel = supabase
+        .channel(`profile:${userId}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+          (payload) => {
+            setState((prev) => ({ ...prev, profile: payload.new as Profile }));
+          }
+        )
+        .subscribe();
+    };
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       let profile: Profile | null = null;
       if (session?.user) {
         profile = await fetchProfile(session.user.id);
+        subscribeToProfile(session.user.id);
       }
       setState({
         user: session?.user ?? null,
@@ -81,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isLoading: false,
         }));
         if (session?.user) {
+          subscribeToProfile(session.user.id);
           setTimeout(async () => {
             const profile = await fetchProfile(session.user.id);
             if (profile) {
@@ -88,12 +108,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }, 0);
         } else {
+          if (realtimeChannel) {
+            supabase.removeChannel(realtimeChannel);
+            realtimeChannel = null;
+          }
           setState((prev) => ({ ...prev, profile: null }));
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
