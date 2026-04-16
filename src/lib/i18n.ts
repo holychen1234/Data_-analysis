@@ -73,7 +73,7 @@ const translations = {
   "home.feat.fastDesc": { zh: "AI 分析在一分钟内完成", en: "AI-powered analysis completes in under a minute" },
 
   "home.cta.title": { zh: "准备好分析您的数据了吗？", en: "Ready to Analyze Your Data?" },
-  "home.cta.desc": { zh: "立即注册，获赠 100 积分，开始 AI 数据分析之旅。", en: "Sign up now and get 100 free credits to start analyzing your data with AI." },
+  "home.cta.desc": { zh: "立即注册，获赠 500 积分，开始 AI 数据分析之旅。", en: "Sign up now and get 500 free credits to start analyzing your data with AI." },
   "home.cta.btn": { zh: "免费开始", en: "Get Started Free" },
   "home.cta.btnLoggedIn": { zh: "进入控制台", en: "Go to Dashboard" },
 
