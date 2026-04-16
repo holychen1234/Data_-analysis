@@ -3221,6 +3221,77 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          referrer_id: string
+          total_credits_earned: number
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          referrer_id: string
+          total_credits_earned?: number
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          referrer_id?: string
+          total_credits_earned?: number
+          used_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_codes_referrer_id_fkey"
+            columns: ["referrer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_usages: {
+        Row: {
+          created_at: string
+          credits_granted: number
+          id: string
+          new_user_id: string
+          referral_code_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_granted?: number
+          id?: string
+          new_user_id: string
+          referral_code_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_granted?: number
+          id?: string
+          new_user_id?: string
+          referral_code_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_usages_new_user_id_fkey"
+            columns: ["new_user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_usages_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           created_at: string

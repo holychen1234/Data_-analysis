@@ -23,6 +23,9 @@ const translations = {
   "common.processing": { zh: "处理中", en: "Processing" },
   "common.failed": { zh: "失败", en: "Failed" },
   "common.unknown": { zh: "未知", en: "Unknown" },
+  "common.copy": { zh: "复制", en: "Copy" },
+  "common.copied": { zh: "已复制", en: "Copied!" },
+  "common.optional": { zh: "可选", en: "Optional" },
 
   // Navbar / Brand
   "brand.name": { zh: "DataViz AI", en: "DataViz AI" },
@@ -88,6 +91,9 @@ const translations = {
   "auth.displayName": { zh: "显示名称", en: "Display Name" },
   "auth.displayNamePlaceholder": { zh: "您的名字", en: "Your name" },
   "auth.passwordHint": { zh: "至少 6 个字符", en: "At least 6 characters" },
+  "auth.referralCode": { zh: "推广码", en: "Referral Code" },
+  "auth.referralCodePlaceholder": { zh: "输入推广码（可选）", en: "Enter referral code (optional)" },
+  "auth.referralBanner": { zh: "您通过推广链接注册，完成注册后推广人将获得 300 积分奖励（码：{code}）", en: "Signing up via referral code {code} — referrer earns 300 credits when you register!" },
   "auth.signInBtn": { zh: "登录", en: "Sign In" },
   "auth.signUpBtn": { zh: "创建账户", en: "Create Account" },
   "auth.regSuccess": { zh: "注册成功！", en: "Registration Successful!" },
@@ -196,6 +202,19 @@ const translations = {
   "credits.type.grant": { zh: "赠送", en: "Grant" },
   "credits.type.recharge": { zh: "充值", en: "Recharge" },
   "credits.type.used": { zh: "消耗", en: "Used" },
+
+  // Credits - Referral
+  "credits.referral.title": { zh: "推广赚积分", en: "Earn Credits by Referral" },
+  "credits.referral.desc": { zh: "邀请好友注册，好友成功注册后您将获得 300 积分", en: "Invite friends to register. Earn 300 credits for each successful signup" },
+  "credits.referral.invitedUsers": { zh: "已邀请用户", en: "Invited Users" },
+  "credits.referral.creditsEarned": { zh: "累计获得积分", en: "Total Credits Earned" },
+  "credits.referral.howTitle": { zh: "如何获得积分", en: "How to earn credits" },
+  "credits.referral.step1": { zh: "生成您的专属推广链接", en: "Generate your unique referral link" },
+  "credits.referral.step2": { zh: "分享链接给朋友", en: "Share the link with friends" },
+  "credits.referral.step3": { zh: "好友注册成功后，您立即获得 300 积分", en: "When a friend registers, you instantly earn 300 credits" },
+  "credits.referral.yourLink": { zh: "您的推广链接", en: "Your referral link" },
+  "credits.referral.code": { zh: "推广码：", en: "Your code:" },
+  "credits.referral.generate": { zh: "生成推广链接", en: "Generate Referral Link" },
 
   // Profile
   "profile.title": { zh: "个人信息", en: "Profile" },
