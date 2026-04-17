@@ -13,6 +13,7 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -44,6 +45,7 @@ export function Sidebar() {
     { to: "/dashboard/admin/users", label: t("nav.manageUsers"), icon: <Users className="h-5 w-5" /> },
     { to: "/dashboard/admin/models", label: t("nav.aiModels"), icon: <BrainCircuit className="h-5 w-5" /> },
     { to: "/dashboard/admin/reports", label: t("nav.allReports"), icon: <BarChart3 className="h-5 w-5" /> },
+    { to: "/dashboard/admin/payments", label: t("nav.payments"), icon: <CreditCard className="h-5 w-5" /> },
   ];
 
   return (

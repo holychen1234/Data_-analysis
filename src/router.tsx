@@ -8,10 +8,13 @@ import ReportsListPage from "./pages/ReportsListPage";
 import ReportPage from "./pages/ReportPage";
 import ProfilePage from "./pages/ProfilePage";
 import CreditsPage from "./pages/CreditsPage";
+import PaymentPage from "./pages/PaymentPage";
+import PaymentResultPage from "./pages/PaymentResultPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import UserManagementPage from "./pages/admin/UserManagementPage";
 import ModelManagementPage from "./pages/admin/ModelManagementPage";
 import ReportsManagementPage from "./pages/admin/ReportsManagementPage";
+import PaymentManagementPage from "./pages/admin/PaymentManagementPage";
 import NotFound from "./pages/NotFound";
 
 export const routers = [
@@ -39,6 +42,9 @@ export const routers = [
       { path: "reports/:id", name: "report-detail", element: <ReportPage /> },
       { path: "profile", name: "profile", element: <ProfilePage /> },
       { path: "credits", name: "credits", element: <CreditsPage /> },
+      { path: "payment/new", name: "payment-new", element: <PaymentPage /> },
+      { path: "payment/success", name: "payment-success", element: <PaymentResultPage /> },
+      { path: "payment/failed", name: "payment-failed", element: <PaymentResultPage /> },
       {
         path: "admin",
         name: "admin",
@@ -72,6 +78,15 @@ export const routers = [
         element: (
           <ProtectedRoute requireAdmin>
             <ReportsManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/payments",
+        name: "admin-payments",
+        element: (
+          <ProtectedRoute requireAdmin>
+            <PaymentManagementPage />
           </ProtectedRoute>
         ),
       },

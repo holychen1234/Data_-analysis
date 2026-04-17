@@ -112,6 +112,7 @@ const translations = {
   "nav.manageUsers": { zh: "用户管理", en: "Manage Users" },
   "nav.aiModels": { zh: "AI 模型", en: "AI Models" },
   "nav.allReports": { zh: "所有报告", en: "All Reports" },
+  "nav.payments": { zh: "支付管理", en: "Payment Mgmt" },
 
   // Dashboard
   "dash.welcome": { zh: "欢迎回来，", en: "Welcome back, " },

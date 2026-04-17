@@ -1,20 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCreditTransactions } from "@/hooks/use-credits";
 import { useReferral } from "@/hooks/use-referral";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Coins, TrendingUp, TrendingDown, Clock, Loader2, Share2, Copy, Check, Users, Gift } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Coins, TrendingUp, TrendingDown, Clock, Loader2, Share2, Copy, Check, Users, Gift, Smartphone, CreditCard, Star } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type PaymentMethod = "alipay" | "wechat";
+
+interface PaymentPackage {
+  id: string;
+  name: string;
+  credits: number;
+  price_yuan: number;
+  original_price: number | null;
+  is_popular: boolean;
+}
 
 export default function CreditsPage() {
   const { profile } = useAuth();
   const { t } = useLanguage();
   const { transactions, isLoading } = useCreditTransactions();
   const { referralCode, isLoading: refLoading, isCreating, createCode, getReferralLink } = useReferral();
+  const navigate = useNavigate();
+
   const [copied, setCopied] = useState(false);
+  const [packages, setPackages] = useState<PaymentPackage[]>([]);
+  const [loadingPkgs, setLoadingPkgs] = useState(true);
+  const [selectedPkg, setSelectedPkg] = useState<PaymentPackage | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("alipay");
+  const [showMethodDialog, setShowMethodDialog] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  async function fetchPackages() {
+    setLoadingPkgs(true);
+    const { data } = await supabase
+      .from("payment_packages")
+      .select("id, name, credits, price_yuan, original_price, is_popular")
+      .eq("is_active", true)
+      .order("sort_order");
+    setPackages(data || []);
+    setLoadingPkgs(false);
+  }
+
+  function openPayment(pkg: PaymentPackage) {
+    setSelectedPkg(pkg);
+    setPaymentMethod("alipay");
+    setShowMethodDialog(true);
+  }
+
+  async function proceedToPayment() {
+    if (!selectedPkg) return;
+    setCreating(true);
+    navigate(`/dashboard/payment/new?pkg=${selectedPkg.id}&method=${paymentMethod}`);
+    setShowMethodDialog(false);
+    setCreating(false);
+  }
 
   const handleCopy = () => {
     const link = getReferralLink();
@@ -48,6 +100,59 @@ export default function CreditsPage() {
         </CardContent>
       </Card>
 
+      {/* Pricing tiers */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">充值套餐</h2>
+        {loadingPkgs ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-3">
+            {packages.map((pkg) => (
+              <Card
+                key={pkg.id}
+                className={cn(
+                  "glass border-border/50 hover:glow-primary transition-all relative overflow-hidden cursor-pointer group",
+                  pkg.is_popular && "border-primary/50"
+                )}
+              >
+                {pkg.is_popular && (
+                  <div className="absolute top-0 left-0 right-0 h-0.5 gradient-primary" />
+                )}
+                {pkg.is_popular && (
+                  <div className="absolute top-3 right-3">
+                    <Badge className="text-xs gradient-primary text-primary-foreground border-0">
+                      <Star className="h-2.5 w-2.5 mr-1" />热门
+                    </Badge>
+                  </div>
+                )}
+                <CardContent className="p-5 text-center space-y-3">
+                  <p className="text-sm font-semibold">{pkg.name}</p>
+                  <div>
+                    <p className="text-3xl font-bold text-gradient-primary">{pkg.credits.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">{t("common.credits")}</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold">¥{pkg.price_yuan}</p>
+                    {pkg.original_price && (
+                      <p className="text-xs text-muted-foreground line-through">原价 ¥{pkg.original_price}</p>
+                    )}
+                  </div>
+                  <Button
+                    className="w-full gradient-primary text-primary-foreground text-sm"
+                    size="sm"
+                    onClick={() => openPayment(pkg)}
+                  >
+                    立即购买
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Referral Section */}
       <Card className="glass border-primary/30 overflow-hidden">
         <div className="h-1 w-full gradient-primary" />
@@ -63,7 +168,6 @@ export default function CreditsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Stats row */}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg bg-muted/30 p-3 text-center">
               <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
@@ -80,8 +184,6 @@ export default function CreditsPage() {
               <p className="text-2xl font-bold text-chart-4">{referralCode?.total_credits_earned ?? 0}</p>
             </div>
           </div>
-
-          {/* Reward info */}
           <div className="rounded-lg border border-border/50 bg-muted/20 p-3 text-sm text-muted-foreground space-y-1">
             <p className="flex items-center gap-1.5 text-foreground font-medium">
               <Share2 className="h-3.5 w-3.5 text-primary" />
@@ -91,8 +193,6 @@ export default function CreditsPage() {
             <p>2. {t("credits.referral.step2")}</p>
             <p>3. {t("credits.referral.step3")}</p>
           </div>
-
-          {/* Link generator */}
           {refLoading ? (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -121,25 +221,6 @@ export default function CreditsPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Pricing tiers */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          { name: t("credits.starter"), credits: 500, description: t("credits.starterDesc") },
-          { name: t("credits.pro"), credits: 2000, description: t("credits.proDesc") },
-          { name: t("credits.enterprise"), credits: 10000, description: t("credits.enterpriseDesc") },
-        ].map((plan) => (
-          <Card key={plan.name} className="glass border-border/50 hover:glow-primary transition-all">
-            <CardContent className="p-5 text-center">
-              <p className="text-sm font-medium">{plan.name}</p>
-              <p className="text-2xl font-bold mt-2 text-gradient-primary">{plan.credits.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t("common.credits")}</p>
-              <p className="text-xs text-muted-foreground mt-2">{plan.description}</p>
-              <p className="text-xs text-muted-foreground mt-3 italic">{t("credits.contactAdmin")}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       {/* Transaction history */}
       <Card className="glass border-border/50">
@@ -195,6 +276,47 @@ export default function CreditsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Payment method selection dialog */}
+      <Dialog open={showMethodDialog} onOpenChange={setShowMethodDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>选择支付方式</DialogTitle>
+            <DialogDescription>
+              {selectedPkg && `${selectedPkg.name} · ${selectedPkg.credits.toLocaleString()} 积分 · ¥${selectedPkg.price_yuan}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            {(["alipay", "wechat"] as PaymentMethod[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => setPaymentMethod(m)}
+                className={cn(
+                  "w-full flex items-center gap-3 rounded-lg border-2 p-4 transition-all text-left",
+                  paymentMethod === m
+                    ? "border-primary bg-primary/10"
+                    : "border-border/50 hover:border-primary/40"
+                )}
+              >
+                <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", m === "alipay" ? "bg-blue-500/10" : "bg-green-500/10")}>
+                  {m === "alipay" ? <CreditCard className="h-5 w-5 text-blue-400" /> : <Smartphone className="h-5 w-5 text-green-400" />}
+                </div>
+                <div>
+                  <p className="font-medium">{m === "alipay" ? "支付宝" : "微信支付"}</p>
+                  <p className="text-xs text-muted-foreground">{m === "alipay" ? "使用支付宝扫码付款" : "使用微信扫码付款"}</p>
+                </div>
+              </button>
+            ))}
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setShowMethodDialog(false)}>取消</Button>
+              <Button className="flex-1 gradient-primary text-primary-foreground" onClick={proceedToPayment} disabled={creating}>
+                {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                去支付
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,0 +1,58 @@
+-- payment_packages table
+CREATE TABLE IF NOT EXISTS public.payment_packages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  credits INTEGER NOT NULL,
+  price_yuan DECIMAL(10,2) NOT NULL,
+  original_price DECIMAL(10,2),
+  is_popular BOOLEAN NOT NULL DEFAULT false,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.payment_packages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "packages_select_all" ON public.payment_packages
+  FOR SELECT USING (true);
+
+CREATE POLICY "packages_admin_all" ON public.payment_packages
+  FOR ALL USING (public.is_admin(auth.uid()));
+
+-- payment_orders table
+CREATE TABLE IF NOT EXISTS public.payment_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_no TEXT NOT NULL UNIQUE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  package_id UUID REFERENCES public.payment_packages(id),
+  credits INTEGER NOT NULL,
+  amount_yuan DECIMAL(10,2) NOT NULL,
+  payment_method TEXT NOT NULL CHECK (payment_method IN ('alipay', 'wechat')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'failed', 'expired')),
+  provider_order_id TEXT,
+  paid_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '15 minutes'),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.payment_orders ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "orders_select_own" ON public.payment_orders
+  FOR SELECT USING (auth.uid() = user_id OR public.is_admin(auth.uid()));
+
+CREATE POLICY "orders_insert_own" ON public.payment_orders
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "orders_admin_all" ON public.payment_orders
+  FOR ALL USING (public.is_admin(auth.uid()));
+
+-- Enable realtime for orders
+ALTER PUBLICATION supabase_realtime ADD TABLE "payment_orders";
+
+-- Seed default packages
+INSERT INTO public.payment_packages (name, credits, price_yuan, original_price, is_popular, sort_order)
+VALUES
+  ('入门包', 500, 39.90, NULL, false, 1),
+  ('标准包', 1500, 99.90, 119.90, true, 2),
+  ('专业包', 3500, 199.90, 249.90, false, 3)
+ON CONFLICT DO NOTHING;
